@@ -5,6 +5,7 @@
     "outDir": "lib",
     "sourceMap": true,
     "strict": true,
+    "declaration": true,
     "target": "es2017",
     "lib": ["ES2020.Promise", "ES2019"],
     "resolveJsonModule": true,
