@@ -23,7 +23,7 @@ export const createImporter = async (settings: Settings) => {
   return i
 }
 
-export const createImport = async (importer: Importer) => {
+export const createImport = async (importer: EventImporter) => {
   const i = {
     ...importer,
     importId: uuid.v4(),
@@ -32,7 +32,7 @@ export const createImport = async (importer: Importer) => {
   return i
 }
 
-const saveImporterState = async (importer: Importer) => {
+const saveImporterState = async (importer: EventImporter) => {
   const finished = importer.progressTitle !== '100%'
   const state = {
     isImportInProcess: finished,
@@ -69,7 +69,7 @@ const updateProgress = (
   return progress[stage]
 }
 
-export const addItem = async (importer: Importer, item: Item) => {
+export const addItem = async (importer: EventImporter, item: Item) => {
   importer.progressTitle = updateProgress('collectingData')
   // entity itself `type:id:lang`
   {
@@ -110,7 +110,7 @@ export const addItem = async (importer: Importer, item: Item) => {
   }
 }
 
-export const addItems = async (importer: Importer, items: Item[]) => {
+export const addItems = async (importer: EventImporter, items: Item[]) => {
   await items.reduce(async (last, x) => {
     await last
     await Promise.resolve(setImmediate)
@@ -118,7 +118,7 @@ export const addItems = async (importer: Importer, items: Item[]) => {
   }, Promise.resolve())
 }
 
-const saveLanguages = async (importer: Importer) => {
+const saveLanguages = async (importer: EventImporter) => {
   const records: entity.Language[] = importer.settings.languages
     .map(languageCode => ({
       isDefault: languageCode === importer.settings.defaultLanguage,
@@ -134,7 +134,7 @@ const saveLanguages = async (importer: Importer) => {
   )
 }
 
-const saveVenues = async (importer: Importer) => {
+const saveVenues = async (importer: EventImporter) => {
   const ids: Array<Item['id']> = (await importer.store.get('venue-ids')) || []
   const constructed = await util.settle(
     ids.flatMap(id => {
@@ -163,7 +163,7 @@ const saveVenues = async (importer: Importer) => {
   )
 }
 
-const savePerformers = async (importer: Importer) => {
+const savePerformers = async (importer: EventImporter) => {
   const ids: Array<Item['id']> = (await importer.store.get('performer-ids')) || []
   const constructed = await util.settle(
     ids.flatMap(id => {
@@ -194,7 +194,7 @@ const savePerformers = async (importer: Importer) => {
   )
 }
 
-const saveSessions = async (importer: Importer) => {
+const saveSessions = async (importer: EventImporter) => {
   const ids: Array<Item['id']> = (await importer.store.get('session-ids')) || []
   const constructed = await util.settle(
     ids.flatMap(id => {
@@ -264,7 +264,7 @@ const saveSessions = async (importer: Importer) => {
   )
 }
 
-export const upload = async (importer: Importer) => {
+export const upload = async (importer: EventImporter) => {
   importer.progressTitle = updateProgress('savingToDatabase')
   await saveSessions(importer)
   await saveLanguages(importer)
@@ -315,9 +315,9 @@ export interface Settings {
     get: (key: string) => Promise<any>
   }
 }
-export type Importer = util.Unpromise<ReturnType<typeof createImporter>>
+export type EventImporter = util.Unpromise<ReturnType<typeof createImporter>>
 
-export const createError = (i: Importer, name: 'no-validation-schema' | 'invalid-item-data', opts?: { error?: any, item?: Item }) => {
+export const createError = (i: EventImporter, name: 'no-validation-schema' | 'invalid-item-data', opts?: { error?: any, item?: Item }) => {
   return Object.assign(
     new Error(name),
     {

@@ -1,7 +1,7 @@
 
 import * as openapi from './openapi'
 import * as ajv from 'ajv'
-import * as eventImport from './import'
+import * as eventImport from './event-import'
 import * as util from './util'
 
 const validator = new (ajv.default)()
@@ -19,7 +19,7 @@ const createCompiledSchemaForType = util.memoize((type: eventImport.Item['type']
     return undefined
 })
 
-export const validate = async (importer: eventImport.Importer, item: eventImport.Item) => {
+export const validate = async (importer: eventImport.EventImporter, item: eventImport.Item) => {
     await 1
     const validate = createCompiledSchemaForType(item.type)
     if (!validate) {
