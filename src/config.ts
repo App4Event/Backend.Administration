@@ -22,6 +22,6 @@ const config = {
 
 const values = configuru.values(config)
 
-export type Config = typeof values;
+export type Config = typeof values
 
 export default values
