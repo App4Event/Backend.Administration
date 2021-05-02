@@ -6,6 +6,12 @@ import * as util from './util'
 
 const validator = new (ajv.default)()
 
+// Register all cross referenced schemas in order to fix
+// ajv error `can't resolve reference from id #`
+validator.addSchema(openapi.schema.components.schemas.Image, '#/components/schemas/Image')
+validator.addSchema(openapi.schema.components.schemas.CustomField, '#/components/schemas/CustomField')
+validator.addSchema(openapi.schema.components.schemas.Link, '#/components/schemas/Link')
+
 const createCompiledSchemaForType = util.memoize((type: eventImport.Item['type']) => {
     if (type === 'performer') {
         return validator.compile(openapi.schema.components.schemas.Performer)

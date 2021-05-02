@@ -15,6 +15,7 @@ export const createImporter = async (settings: Settings) => {
     endTime: undefined as Date | undefined,
     progressTitle: updateProgress('start'),
     firestore: f,
+    trackOnlyDataInFirestore: settings.trackOnlyDataInFirestore ?? false,
     /** Legacy for startTime/endTime */
     startAt: new Date(),
     endAt: undefined as Date | undefined,
@@ -49,7 +50,7 @@ const saveImporterState = async (importer: EventImporter) => {
       'imports/info',
       state
     ),
-    importer.importId && firestore.save(
+    !importer.settings.trackOnlyDataInFirestore && importer.importId && firestore.save(
       importer.firestore,
       firestore.path['/imports/{id}']({ id: importer.importId }),
       state
@@ -266,8 +267,8 @@ const saveSessions = async (importer: EventImporter) => {
 
 export const upload = async (importer: EventImporter) => {
   importer.progressTitle = updateProgress('savingToDatabase')
-  await saveSessions(importer)
   await saveLanguages(importer)
+  await saveSessions(importer)
   await saveVenues(importer)
   await savePerformers(importer)
   importer.progressTitle = updateProgress('finished')
@@ -309,6 +310,8 @@ export interface Settings {
   languages: string[]
   /** cs, en, ... */
   defaultLanguage: string
+  /** If true, no event progrss is written/updated in firestore, only imported data */
+  trackOnlyDataInFirestore?: boolean
   /** memory story by default, @see {@link createMemoryStore} */
   store?: {
     set: (key: string, val: any) => void
