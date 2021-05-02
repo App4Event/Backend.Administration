@@ -1,0 +1,165 @@
+openapi: "3.0.0"
+info:
+  title: app4event
+  version: "1.0"
+paths:
+  /import:
+    post:
+      responses:
+        200:
+          description: OK
+components:
+  schemas:
+    Language:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Language code, e.g. `cs`
+        isDefault:
+          type: boolean
+        name:
+          type: string
+      required:
+        - isDefault
+        - name
+        - id
+    Link:
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - unknown
+            - HTTP
+            - FACEBOOK
+            - TWITTER
+            - YOUTUBE
+            - VIMEO
+            - SOUNDCLOUD
+            - LINKEDIN
+            - CSFD
+            - IMDB
+            - INSTAGRAM
+        link:
+          type: string
+      required:
+        - type
+    Performer:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
+        customFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomField'
+        # tags
+        sessionIds:
+          type: array
+          items:
+            type: string
+        venueIds:
+          type: array
+          items:
+            type: string
+        # links
+        # updateTime
+      required:
+        - id
+        - name
+        - sessionIds
+        - venueIds
+    Venue:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        order:
+          type: number
+        description:
+          type: string
+        color:
+          type: string
+        # links
+        # customFields
+        # location
+      required:
+        - id
+        - name
+        - order
+    Session:
+      type: object
+      properties:
+        id:
+          type: string
+        performerIds:
+          type: array
+          items:
+            type: string
+        performerNames:
+          type: array
+          items:
+            type: string
+        venueId:
+          type: string
+        venueName:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        timeFrom:
+          type: string
+        timeTo:
+          type: string
+        # images:
+        # links
+        # customFields
+        # tags
+        hasParent:
+          type: boolean
+        subsessionIds:
+          type: array
+          items:
+            type: string
+        likes:
+          type: number
+        forcedSessionDetail:
+          type: boolean
+      required:
+        - id
+        - performerIds
+        - performerNames
+        - venueId
+        - venueName
+        - timeFrom
+        - timeTo
+        - hasParent
+        - subsessionIds
+    CustomField:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: string
+    Image:
+      type: object
+      properties:
+        id:
+          type: string
+        uri:
+          type: string
