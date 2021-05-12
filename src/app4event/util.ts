@@ -52,6 +52,9 @@ export const pluck = <TItem extends any, TRet extends any>(items: TItem[] | unde
   return lodash.uniq(items.map(iteratee).filter(x => x)) as Array<NonNullable<TRet>>
 }
 
+/**
+ *  Converts given value into Date if possible
+ */
 export const createDate = (value: any) => {
   if (!value) return
   const t = new Date(value)
