@@ -6,7 +6,8 @@ export * as filmchief from './filmchief'
 export { onImportRequest, onImportCreated } from './functions'
 export { EventImporter } from './event-import'
 export { FilmChiefConnection } from './filmchief'
-export { Item as ImportItem } from './event-import'
+export { Item as ImportItem, sanitizeCustomFields } from './event-import'
+export * as util from './util'
 
 export { eventImport }
 

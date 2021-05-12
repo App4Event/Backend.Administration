@@ -186,6 +186,7 @@ const savePerformers = async (importer: EventImporter) => {
           const sessionIds = util.pluck(sessions, x => x?.data.id)
           const venues = await populateId(importer, 'venue', referencedVenueIds, languageCode)
           const venueIds = util.pluck(venues, x => x.id)
+          const customFields = sanitizeCustomFields(item.data.customFields)
           return {
             ...item,
             language: languageCode,
@@ -194,6 +195,7 @@ const savePerformers = async (importer: EventImporter) => {
               id,
               sessionIds,
               venueIds,
+              customFields,
             },
           }
         })
@@ -335,3 +337,13 @@ export interface Settings {
   }
 }
 export type EventImporter = util.Unpromise<ReturnType<typeof createImporter>>
+
+export const sanitizeCustomFields = (items?: Array<{ name?: any, value?: any }>): entity.CustomField[] => {
+  if (!items) return []
+  return items
+    .map(x => ({
+      name: x.name ? String(x.name) : '',
+      value: x.value ? String(x.value) : '',
+    }))
+    .filter(x => x.name && x.value)
+}
