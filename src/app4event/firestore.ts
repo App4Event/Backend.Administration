@@ -1,5 +1,6 @@
 import * as firebaseAdmin from 'firebase-admin'
 import * as lodash from 'lodash'
+import * as util from './util'
 
 export const connectFirestore = () => {
   const f = new firebaseAdmin.firestore.Firestore()
@@ -29,4 +30,27 @@ export const save = async (conn: FirestoreConnection, path: string, doc: any) =>
   const cleanedDoc = lodash.omitBy(doc, lodash.isUndefined)
   if (lodash.isEmpty(cleanedDoc)) return
   await conn.firestore.doc(path).set(cleanedDoc, { merge: true })
+}
+
+/**
+ * Converts given keys in given object to Firestore specific structures.
+ * Like GeoPoint, dates etc.
+ * @param item
+ * @param settings
+ * @returns
+ */
+export const convertFirstoreKeys = <TItem extends Record<string, any>, TKey extends keyof TItem>(item: TItem, settings: {
+  dates: TKey[]
+}) => {
+  // TBA: Geolocation overrides
+  const datesOverride = settings.dates.reduce((override, prop) => {
+    return {
+      ...override,
+      [prop]: util.createDate(item[prop]),
+    }
+  }, {})
+  return {
+    ...item,
+    ...datesOverride,
+  }
 }

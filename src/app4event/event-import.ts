@@ -257,7 +257,7 @@ const saveSessions = async (importer: EventImporter) => {
       firestore.save(
         importer.firestore,
         firestore.path['/languages/{lang}/sessions/{id}']({ lang: item.language, id: item.id }),
-        item.data
+        firestore.convertFirstoreKeys(item.data, { dates: ['timeFrom', 'timeTo'] })
       )
     )
   )
