@@ -14,7 +14,7 @@ export const createImporter = async (settings: Settings) => {
     store: settings.store ?? createMemoryStore(),
     startTime: new Date(),
     endTime: undefined as Date | undefined,
-    progressTitle: updateProgress('start'),
+    progress: updateProgress('start'),
     firestore: f,
     trackOnlyDataInFirestore: settings.trackOnlyDataInFirestore ?? false,
     /** Legacy for startTime/endTime */
@@ -35,11 +35,11 @@ export const createImport = async (importer: EventImporter) => {
 }
 
 const saveImporterState = async (importer: EventImporter) => {
-  const finished = importer.progressTitle !== '100%'
+  const finished = importer.progress < 1
   const state = {
     isImportInProcess: finished,
     importInProgress: finished,
-    progress: importer.progressTitle,
+    progress: importer.progress,
     startTime: importer.startTime,
     endTime: importer.endTime,
     startAt: importer.startAt,
@@ -59,20 +59,27 @@ const saveImporterState = async (importer: EventImporter) => {
   ])
 }
 
-const updateProgress = (
-  stage: 'start' | 'collectingData' | 'savingToDatabase' | 'finished'
-) => {
-  const progress: Record<typeof stage, string> = {
-    start: '0%',
-    collectingData: '1%',
-    savingToDatabase: '30%',
-    finished: '100%',
+function updateProgress(stage: 'savingToDatabase', opts?: { step: number, maxSteps: number}): number
+function updateProgress(stage: 'start' | 'collectingData' | 'finished'): number
+function updateProgress(
+  stage: 'start' | 'collectingData' | 'savingToDatabase' | 'finished',
+  opts?: { step: number, maxSteps: number }
+): number {
+  const progress: Record<typeof stage, number> = {
+    start: 0,
+    collectingData: 0.01,
+    savingToDatabase: 0.3,
+    finished: 1,
   }
-  return progress[stage]
+  let progressValue = progress[stage]
+  if (stage === 'savingToDatabase' && opts) {
+    progressValue = progress.savingToDatabase + (progress.finished - progress.savingToDatabase) * (opts.step / opts.maxSteps)
+  }
+  return Number(progressValue.toFixed(2))
 }
 
 export const addItem = async (importer: EventImporter, item: Item) => {
-  importer.progressTitle = updateProgress('collectingData')
+  importer.progress = updateProgress('collectingData')
   // entity itself `type:id:lang`
   {
     const key = `${item.type}:${item.id}:${item.language}`
@@ -265,13 +272,24 @@ const saveSessions = async (importer: EventImporter) => {
   )
 }
 
+const uploadLoading = (importer: EventImporter, tasks: Array<() => Promise<any>>) => {
+  return tasks.reduce(async (last, task, i) => {
+    await last
+    importer.progress = updateProgress('savingToDatabase', { step: i + 1, maxSteps: tasks.length })
+    await saveImporterState(importer)
+    await task()
+  }, Promise.resolve())
+}
+
 export const upload = async (importer: EventImporter) => {
-  importer.progressTitle = updateProgress('savingToDatabase')
-  await saveLanguages(importer)
-  await saveSessions(importer)
-  await saveVenues(importer)
-  await savePerformers(importer)
-  importer.progressTitle = updateProgress('finished')
+  importer.progress = updateProgress('savingToDatabase')
+  await uploadLoading(importer, [
+    () => saveLanguages(importer),
+    () => saveSessions(importer),
+    () => saveVenues(importer),
+    () => savePerformers(importer),
+  ])
+  importer.progress = updateProgress('finished')
   importer.endAt = new Date()
   importer.endTime = new Date()
   await saveImporterState(importer)
