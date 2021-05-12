@@ -47,6 +47,13 @@ export const settle = async <T>(promises: Array<Promise<T>>) => {
  * @param iteratee
  * @returns
  */
-export const pluck = <TItem extends any, TRet extends any>(items: TItem[], iteratee: (item: TItem) => TRet) => {
+export const pluck = <TItem extends any, TRet extends any>(items: TItem[] | undefined, iteratee: (item: TItem) => TRet) => {
+  if (!items) return [] as Array<NonNullable<TRet>>
   return lodash.uniq(items.map(iteratee).filter(x => x)) as Array<NonNullable<TRet>>
+}
+
+export const createDate = (value: any) => {
+  if (!value) return
+  const t = new Date(value)
+  return isNaN(t.getTime()) ? undefined : t
 }
