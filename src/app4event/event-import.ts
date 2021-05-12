@@ -4,6 +4,7 @@ import * as firestore from './firestore'
 import * as ISO6391 from 'iso-639-1'
 import * as uuid from 'uuid'
 import * as validation from './validation'
+import * as errors from './errors'
 
 export const createImporter = async (settings: Settings) => {
   const f = firestore.connectFirestore()
@@ -98,11 +99,12 @@ export const addItem = async (importer: EventImporter, item: Item) => {
       item.data.performerIds
         ?.map(async performerId => {
           const key = `performer2venues:${performerId}`
-          await addUniq(key, item.data.venueId!)
+          await addUniq(key, item.data.venueId)
         })
     )
   }
-  async function addUniq(key: string, value: Item['id']) {
+  async function addUniq(key: string, value?: Item['id']) {
+    if (value === undefined) return importer.store.get(key)
     const currentValue = (importer.store as any).store.get(key)
     const ids: Array<Item['id']> = currentValue || []
     const newIds = util.uniq(ids.concat(value))
@@ -139,12 +141,18 @@ const saveVenues = async (importer: EventImporter) => {
   const ids: Array<Item['id']> = (await importer.store.get('venue-ids')) || []
   const constructed = await util.settle(
     ids.flatMap(id => {
-      const defaultDataP: Promise<Item & { type: 'venue' }> = importer.store.get(`venue:${id}:${importer.settings.defaultLanguage}`)
       return importer.settings.languages
         .flatMap(async languageCode => {
-          const defaultData = await defaultDataP
-          const langData: Item & { type: 'venue' } = await importer.store.get(`venue:${id}:${languageCode}`)
-          return util.defaults(defaultData, util.defaults({ language: languageCode }, langData)) as typeof langData
+          const item = await populateId(importer, 'venue', id, languageCode)
+          if (!item) throw errors.createImportError(importer, errors.NO_ITEM_DATA)
+          return {
+            ...item,
+            language: languageCode,
+            data: {
+              ...item?.data,
+              id,
+            },
+          }
         })
     })
   )
@@ -168,14 +176,26 @@ const savePerformers = async (importer: EventImporter) => {
   const ids: Array<Item['id']> = (await importer.store.get('performer-ids')) || []
   const constructed = await util.settle(
     ids.flatMap(id => {
-      const defaultDataP: Promise<Item & { type: 'performer' }> = importer.store.get(`performer:${id}:${importer.settings.defaultLanguage}`)
       return importer.settings.languages
         .flatMap(async languageCode => {
-          const defaultData = await defaultDataP
-          const langData: Item & { type: 'performer' } = await importer.store.get(`performer:${id}:${languageCode}`)
-          const sessionIds: Performer['data']['sessionIds'] = (await importer.store.get(`performer2sessions:${id}`)) || []
-          const venueIds: Performer['data']['venueIds'] = (await importer.store.get(`performer2venues:${id}`)) || []
-          return util.defaults(defaultData, util.defaults({ language: languageCode, data: { sessionIds, venueIds } }, langData)) as typeof langData
+          const item = await populateId(importer, 'performer', id, languageCode)
+          if (!item) throw errors.createImportError(importer, errors.NO_ITEM_DATA)
+          const referencedSessionIds: Array<Session['data']['id']> = (await importer.store.get(`performer2sessions:${id}`)) ?? []
+          const referencedVenueIds: Array<NonNullable<Session['data']['venueId']>> = (await importer.store.get(`performer2venues:${id}`)) ?? []
+          const sessions = await populateId(importer, 'session', referencedSessionIds, languageCode)
+          const sessionIds = util.pluck(sessions, x => x?.data.id)
+          const venues = await populateId(importer, 'venue', referencedVenueIds, languageCode)
+          const venueIds = util.pluck(venues, x => x.id)
+          return {
+            ...item,
+            language: languageCode,
+            data: {
+              ...item.data,
+              id,
+              sessionIds,
+              venueIds,
+            },
+          }
         })
     })
   )
@@ -199,53 +219,31 @@ const saveSessions = async (importer: EventImporter) => {
   const ids: Array<Item['id']> = (await importer.store.get('session-ids')) || []
   const constructed = await util.settle(
     ids.flatMap(id => {
-      const defaultDataP: Promise<Item & { type: 'session' }> = importer.store.get(`session:${id}:${importer.settings.defaultLanguage}`)
       return importer.settings.languages
         .flatMap(async languageCode => {
-          const defaultData = await defaultDataP
-          const langData: Item & { type: 'session' } = await importer.store.get(`session:${id}:${languageCode}`)
-          const performers = (
-            await Promise.all(
-              util
-                .uniq([
-                  ...(defaultData?.data.performerIds ?? []),
-                  ...(langData?.data.performerIds ?? []),
-                ])
-                .map(
-                  async id =>
-                    util.defaults(
-                      await importer.store.get(
-                        `performer:${id}:${languageCode}`
-                      ),
-                      await importer.store.get(
-                        `performer:${id}:${importer.settings.defaultLanguage}`
-                      )
-                    ) as Item & { type: 'performer' }
-                )
-            )
-          ).filter(x => x)
-          const venue = (
-            await Promise.all(
-              util
-                .uniq([
-                  ...(defaultData?.data.venueId ?? []),
-                  ...(langData?.data.venueId ?? []),
-                ])
-                .map(
-                  async id =>
-                    util.defaults(
-                      await importer.store.get(`venue:${id}:${languageCode}`),
-                      await importer.store.get(
-                        `venue:${id}:${importer.settings.defaultLanguage}`
-                      )
-                    ) as Item & { type: 'venue' }
-                )
-            )
-          ).filter(x => x)[0]
-          const performerNames = performers.map(x => x.data.name).filter(x => x)
+          const data = await populateId(importer, 'session', id, languageCode)
+          if (!data) throw errors.createImportError(importer, errors.NO_ITEM_DATA)
+          const performers = await populateId(importer, 'performer', data?.data.performerIds, languageCode)
+          const venue = await populateId(importer, 'venue', data?.data.venueId, languageCode)
           const subsessionIds: string[] = [] // TODO
+          const performerNames = util.pluck(performers, x => x.data.name)
+          const performerIds = util.pluck(performers, x => x.data.id)
           const venueName = venue?.data.name
-          return util.defaults(defaultData, util.defaults({ language: languageCode, data: { hasParent: false, performerIds: [], performerNames, subsessionIds, venueName } }, langData)) as typeof langData
+          const venueId = venue?.id
+          return {
+            ...data,
+            language: languageCode,
+            data: {
+              ...data?.data,
+              id,
+              hasParent: false, // TODO
+              subsessionIds,
+              performerIds,
+              performerNames,
+              venueId,
+              venueName,
+            },
+          }
         })
     })
   )
@@ -277,6 +275,24 @@ export const upload = async (importer: EventImporter) => {
   await saveImporterState(importer)
 }
 
+function populateId<TItemType extends Item['type']>(importer: EventImporter, ent: TItemType, id: Array<Item['id']> | undefined, lang: Item['language']): Promise<Array<Item & { type: TItemType }>>
+function populateId<TItemType extends Item['type']>(importer: EventImporter, ent: TItemType, id: Item['id'] | undefined, lang: Item['language']): Promise<Item & { type: TItemType } | undefined>
+async function populateId<TItemType extends Item['type']>(importer: EventImporter, ent: TItemType, id: Item['id'] | Array<Item['id']> | undefined, lang: Item['language']): Promise<Item & { type: TItemType } | Array<Item & { type: TItemType }> | undefined> {
+  if (!id) return
+  const ids = Array.isArray(id) ? id : [id]
+  const result = await util.settle(
+    ids.map(async id => {
+      const languageData = await importer.store.get(`${ent}:${id}:${lang}`)
+      const defualtLanguageData = await await importer.store.get(`${ent}:${id}:${importer.settings.defaultLanguage}`)
+      return util.defaults(
+        languageData,
+        defualtLanguageData
+      ) as Item & { type: typeof ent }
+    })
+  )
+  return Array.isArray(id) ? result.results.filter(x => x) : result.results[0]
+}
+
 export const createMemoryStore = () => {
   const store = new Map()
   return {
@@ -294,15 +310,15 @@ export const createMemoryStore = () => {
 
 export interface Performer {
   type: 'performer'
-  data: Partial<entity.Performer>
+  data: Partial<entity.Performer> & Pick<entity.Performer, 'id'>
 }
 export interface Session {
   type: 'session'
-  data: Partial<entity.Session>
+  data: Partial<entity.Session> & Pick<entity.Session, 'id'>
 }
 export interface Venue {
   type: 'venue'
-  data: Partial<entity.Venue>
+  data: Partial<entity.Venue> & Pick<entity.Venue, 'id'>
 }
 export type Item = { id: string; type: string; language: string; } & (Performer | Session | Venue)
 export interface Settings {
@@ -319,13 +335,3 @@ export interface Settings {
   }
 }
 export type EventImporter = util.Unpromise<ReturnType<typeof createImporter>>
-
-export const createError = (i: EventImporter, name: 'no-validation-schema' | 'invalid-item-data', opts?: { error?: any, item?: Item }) => {
-  return Object.assign(
-    new Error(name),
-    {
-      importer: i,
-      ...opts,
-    }
-  )
-}

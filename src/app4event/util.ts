@@ -37,3 +37,16 @@ export const settle = async <T>(promises: Array<Promise<T>>) => {
       .map(x => (x as typeof x & { status: 'rejected' }).reason),
   }
 }
+
+/**
+ * Extract props from each item of the array.
+ * + no falsy values in the result
+ * + no repeated values in the result
+ * + always array is returned
+ * @param items
+ * @param iteratee
+ * @returns
+ */
+export const pluck = <TItem extends any, TRet extends any>(items: TItem[], iteratee: (item: TItem) => TRet) => {
+  return lodash.uniq(items.map(iteratee).filter(x => x)) as Array<NonNullable<TRet>>
+}

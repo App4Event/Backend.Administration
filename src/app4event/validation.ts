@@ -3,6 +3,7 @@ import * as openapi from './openapi'
 import * as ajv from 'ajv'
 import * as eventImport from './event-import'
 import * as util from './util'
+import * as errors from './errors'
 
 const validator = new (ajv.default)()
 
@@ -29,9 +30,9 @@ export const validate = async (importer: eventImport.EventImporter, item: eventI
     await 1
     const validate = createCompiledSchemaForType(item.type)
     if (!validate) {
-        throw eventImport.createError(importer, 'no-validation-schema')
+        throw errors.createImportError(importer, errors.NO_VALIDATION_SCHEMA)
     }
     validate(item.data)
     if (!validate.errors) return item
-    throw eventImport.createError(importer, 'invalid-item-data', { item, error: validate.errors })
+    throw errors.createImportError(importer, errors.INVALID_ITEM_DATA, { item, error: validate.errors })
 }
