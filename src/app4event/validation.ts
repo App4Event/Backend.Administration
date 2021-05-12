@@ -26,7 +26,7 @@ const createCompiledSchemaForType = util.memoize((type: eventImport.Item['type']
     return undefined
 })
 
-export const validate = async (importer: eventImport.EventImporter, item: eventImport.Item) => {
+export const validate = async <TItem extends eventImport.Item>(importer: eventImport.EventImporter, item: TItem) => {
     await 1
     const validate = createCompiledSchemaForType(item.type)
     if (!validate) {
