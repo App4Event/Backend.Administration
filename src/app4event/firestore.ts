@@ -46,7 +46,7 @@ export const convertFirstoreKeys = <TItem extends Record<string, any>, TKey exte
   const datesOverride = settings.dates.reduce((override, prop) => {
     return {
       ...override,
-      [prop]: util.createDate(item[prop]),
+      [prop]: util.createDate(item[prop]) ?? null,
     }
   }, {})
   return {
