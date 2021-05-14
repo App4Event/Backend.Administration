@@ -1,6 +1,6 @@
 import * as lodash from 'lodash'
 
-export { uniq, memoize } from 'lodash'
+export { uniq, memoize, countBy } from 'lodash'
 
 export type Unpromise<T> = T extends Promise<infer U> ? U : T
 

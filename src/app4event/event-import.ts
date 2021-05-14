@@ -20,7 +20,10 @@ export const createImporter = async (settings: Settings) => {
     /** Legacy for startTime/endTime */
     startAt: new Date(),
     endAt: undefined as Date | undefined,
+    errors: [] as Error[],
   }
+  await saveImporterState(i)
+  i.progress = updateProgress('ready')
   await saveImporterState(i)
   return i
 }
@@ -35,15 +38,25 @@ export const createImport = async (importer: EventImporter) => {
 }
 
 const saveImporterState = async (importer: EventImporter) => {
-  const finished = importer.progress < 1
+  const finished = importer.progress >= 1 ||
+    // Loading data failure means no data, therefore no import
+    !!importer.errors.find(x => x.message === errors.LOADING_DATA_FAILED)
+  const progress = finished ? 1 : importer.progress
+  const errorSummary = Object.entries(util.countBy(importer.errors, x => x.message))
+    .reduce<string[]>((summary, entry) => {
+      return summary.concat(`${entry[0]}: ${entry[1]}x`)
+    }, [])
+    .join(', ') || 'No errors'
+
   const state = {
     isImportInProcess: finished,
     importInProgress: finished,
-    progress: importer.progress,
+    progress,
     startTime: importer.startTime,
     endTime: importer.endTime,
     startAt: importer.startAt,
     endAt: importer.endAt,
+    errorSummary,
   }
   await Promise.allSettled([
     firestore.save(
@@ -54,20 +67,21 @@ const saveImporterState = async (importer: EventImporter) => {
     !importer.settings.trackOnlyDataInFirestore && importer.importId && firestore.save(
       importer.firestore,
       firestore.path['/imports/{id}']({ id: importer.importId }),
-      state
+      firestore.convertFirstoreKeys(state, { dates: ['endAt', 'endTime', 'startAt', 'startTime'] })
     ),
   ])
 }
 
 function updateProgress(stage: 'savingToDatabase', opts?: { step: number, maxSteps: number}): number
-function updateProgress(stage: 'start' | 'collectingData' | 'finished'): number
+function updateProgress(stage: 'start' | 'ready' | 'collectingData' | 'finished'): number
 function updateProgress(
-  stage: 'start' | 'collectingData' | 'savingToDatabase' | 'finished',
+  stage: 'start' | 'ready' | 'collectingData' | 'savingToDatabase' | 'finished',
   opts?: { step: number, maxSteps: number }
 ): number {
   const progress: Record<typeof stage, number> = {
     start: 0,
-    collectingData: 0.01,
+    ready: 0.01,
+    collectingData: 0.05,
     savingToDatabase: 0.3,
     finished: 1,
   }
@@ -293,6 +307,24 @@ export const upload = async (importer: EventImporter) => {
   importer.endAt = new Date()
   importer.endTime = new Date()
   await saveImporterState(importer)
+}
+
+/**
+ * Start the import with given start function
+ * in order to wrap initial call with importer for possible errors
+ *
+ * StartFn is any user defined function working with given importer.
+ *
+ * @param importer
+ * @param startFn
+ */
+export const startLoading = async (importer: EventImporter, load: (importer: EventImporter) => Promise<void>) => {
+  try {
+    await load(importer)
+  } catch (error) {
+    importer.errors.push(errors.createImportError(importer, errors.LOADING_DATA_FAILED))
+    await saveImporterState(importer)
+  }
 }
 
 function populateId<TItemType extends Item['type']>(importer: EventImporter, ent: TItemType, id: Array<Item['id']> | undefined, lang: Item['language']): Promise<Array<Item & { type: TItemType }>>
