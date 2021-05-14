@@ -4,10 +4,10 @@ import * as eventImport from './event-import'
 export * from './entity'
 export { EventImporter, Item as ImportItem, sanitizeCustomFields } from './event-import'
 export * as filmchief from './filmchief'
+export { FilmChiefConnection, Image as FilmChiefImage } from './filmchief'
 export { onImportCreated, onImportRequest } from './functions'
 export * as util from './util'
 export { eventImport }
-
 
 export const createBackend = (settings: {
   event: eventImport.Settings,
