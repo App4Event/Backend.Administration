@@ -13,6 +13,9 @@ type FirestoreConnection = ReturnType<typeof connectFirestore>
 
 export const path = {
   '/languages/{lang}/': ({ lang }: { lang: string }) => '/languages/{lang}/'.replace('{lang}', lang),
+  '/languages/{lang}/performers': ({ lang }: { lang: string }) => '/languages/{lang}/performers'.replace('{lang}', lang),
+  '/languages/{lang}/sessions': ({ lang }: { lang: string }) => '/languages/{lang}/sessions'.replace('{lang}', lang),
+  '/languages/{lang}/venues': ({ lang }: { lang: string }) => '/languages/{lang}/venues'.replace('{lang}', lang),
   '/languages/{lang}/performers/{id}': ({ lang, id }: { lang: string; id: string; }) => '/languages/{lang}/performers/{id}'
     .replace('{lang}', lang)
     .replace('{id}', id),
@@ -30,6 +33,25 @@ export const save = async (conn: FirestoreConnection, path: string, doc: any) =>
   const cleanedDoc = lodash.omitBy(doc, lodash.isUndefined)
   if (lodash.isEmpty(cleanedDoc)) return
   await conn.firestore.doc(path).set(cleanedDoc, { merge: true })
+}
+
+export const getCollectionDocumentIds = async (conn: FirestoreConnection, collectionName: string) => {
+  const collection = conn.firestore.collection(collectionName)
+  const limit = 50
+  let lastItem: firebaseAdmin.firestore.QueryDocumentSnapshot | undefined
+  const ids: string[] = []
+  do {
+    let query = collection.limit(limit)
+    if (lastItem) query = query.startAfter(lastItem)
+    const result = await query.get()
+    lastItem = result.docs.slice(-1)[0]
+    result.docs.forEach(doc => {
+      ids.push(doc.id)
+    })
+  } while (lastItem)
+  return {
+    ids,
+  }
 }
 
 /**
@@ -53,4 +75,16 @@ export const convertFirstoreKeys = <TItem extends Record<string, any>, TKey exte
     ...item,
     ...datesOverride,
   }
+}
+
+export const deleteCollectionDocumentsByIds = async (conn: FirestoreConnection, collectionName: string, ids: string[]) => {
+  await util.chunk(ids, 100)
+    .reduce(async (last, ids) => {
+      await last
+      const batch = conn.firestore.batch()
+      ids.forEach(id => {
+        batch.delete(conn.firestore.doc(`${collectionName}/${id}`))
+      })
+      await batch.commit()
+    }, Promise.resolve())
 }

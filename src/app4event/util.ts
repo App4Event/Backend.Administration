@@ -1,8 +1,10 @@
 import * as lodash from 'lodash'
 
-export { uniq, memoize, countBy } from 'lodash'
+export { chunk, difference, uniq, memoize, countBy } from 'lodash'
 
 export type Unpromise<T> = T extends Promise<infer U> ? U : T
+
+export type ValueOf<T> = T[keyof T]
 
 export const defaults = (a: any, b: any) => {
   if ([undefined, null].includes(b)) return a
@@ -43,13 +45,23 @@ export const settle = async <T>(promises: Array<Promise<T>>) => {
  * + no falsy values in the result
  * + no repeated values in the result
  * + always array is returned
+ * + iteratee is not called with undefined or null and is skipped automatically
  * @param items
  * @param iteratee
  * @returns
  */
-export const pluck = <TItem extends any, TRet extends any>(items: TItem[] | undefined, iteratee: (item: TItem) => TRet) => {
+export const pluck = <TItem extends any, TRet extends any>(items: TItem[] | undefined | null, iteratee: (item: NonNullable<TItem>) => TRet) => {
   if (!items) return [] as Array<NonNullable<TRet>>
-  return lodash.uniq(items.map(iteratee).filter(x => x)) as Array<NonNullable<TRet>>
+  return lodash.uniq(
+    items
+      .map(item => {
+        if (item === null || item === undefined) {
+          return item
+        }
+        return iteratee(item as any as NonNullable<TItem>)
+      })
+      .filter(x => x)
+  ) as Array<NonNullable<TRet>>
 }
 
 /**

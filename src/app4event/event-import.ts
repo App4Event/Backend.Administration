@@ -7,6 +7,8 @@ import * as validation from './validation'
 import * as errors from './errors'
 
 export const createImporter = async (settings: Settings) => {
+  /* eslint-disable @typescript-eslint/consistent-type-assertions */
+
   const f = firestore.connectFirestore()
   const i = {
     importId: '',
@@ -21,11 +23,61 @@ export const createImporter = async (settings: Settings) => {
     startAt: new Date(),
     endAt: undefined as Date | undefined,
     errors: [] as Error[],
+    warnings: [] as Error[],
+    invalidEntity: {
+      session: {} as Record<string, Item & { type: 'session' }>,
+      performer: {} as Record<string, Item & { type: 'performer' }>,
+      venue: {} as Record<string, Item & { type: 'venue' }>,
+    },
   }
   await saveImporterState(i)
   i.progress = updateProgress('ready')
   await saveImporterState(i)
   return i
+}
+
+export const deleteUnreferenced = async (importer: EventImporter) => {
+  await pruneLanguagesCollection('performer')
+  await pruneLanguagesCollection('session')
+  await pruneLanguagesCollection('venue')
+
+  async function getKeepIds(ent: Item['type']) {
+    const downloadedIds: string[] = await importer.store.get(`${ent}-ids`) ?? []
+    const invalidIds = Object.keys(importer.invalidEntity[ent])
+    return util.difference(downloadedIds, invalidIds)
+  }
+  function getEntityCollection(ent: Item['type']) {
+    const choices: Record<Item['type'], any> = {
+      performer: firestore.path['/languages/{lang}/performers'],
+      session: firestore.path['/languages/{lang}/sessions'],
+      venue: firestore.path['/languages/{lang}/venues'],
+    }
+    return choices[ent]
+  }
+  /**
+   * @param path Those only with { lang } input
+   */
+  async function pruneLanguagesCollection(ent: Item['type']) {
+    await Promise.all(
+      importer.settings.languages.map(async language => {
+        const collectionName = getEntityCollection(ent)({ lang: language } as any)
+        const keepIds = await getKeepIds(ent)
+        const collectionIds = await firestore.getCollectionDocumentIds(
+          importer.firestore,
+          collectionName
+        )
+        const deleteIds = util.difference(collectionIds.ids, keepIds)
+        deleteIds.forEach(_id => {
+          importer.warnings.push(errors.createImportError(importer, errors.DELETED_DATABASE_ITEM))
+        })
+        await firestore.deleteCollectionDocumentsByIds(
+          importer.firestore,
+          collectionName,
+          deleteIds
+        )
+      })
+    )
+  }
 }
 
 export const createImport = async (importer: EventImporter) => {
@@ -48,15 +100,22 @@ const saveImporterState = async (importer: EventImporter) => {
     }, [])
     .join(', ') || 'No errors'
 
+  const warningSummary = Object.entries(util.countBy(importer.warnings, x => x.message))
+    .reduce<string[]>((summary, entry) => {
+      return summary.concat(`${entry[0]}: ${entry[1]}x`)
+    }, [])
+    .join(', ') || 'No warnings'
+
   const state = {
-    isImportInProcess: finished,
-    importInProgress: finished,
+    isImportInProcess: !finished,
+    importInProgress: !finished,
     progress,
     startTime: importer.startTime,
     endTime: importer.endTime,
     startAt: importer.startAt,
     endAt: importer.endAt,
     errorSummary,
+    warningSummary,
   }
   await Promise.allSettled([
     firestore.save(
@@ -177,11 +236,14 @@ const saveVenues = async (importer: EventImporter) => {
         })
     })
   )
+  reportErrors(importer, constructed.errors, { marksItemInvalid: true })
   const validated = await util.settle(
     constructed.results.map(item =>
       validation.validate(importer, item)
     )
   )
+  reportErrors(importer, validated.errors, { marksItemInvalid: true })
+
   await util.settle(
     validated.results.map(item =>
       firestore.save(
@@ -222,11 +284,13 @@ const savePerformers = async (importer: EventImporter) => {
         })
     })
   )
+  reportErrors(importer, constructed.errors, { marksItemInvalid: true })
   const validated = await util.settle(
     constructed.results.map(item =>
       validation.validate(importer, item)
     )
   )
+  reportErrors(importer, validated.errors, { marksItemInvalid: true })
   await util.settle(
     validated.results.map(item =>
       firestore.save(
@@ -270,11 +334,13 @@ const saveSessions = async (importer: EventImporter) => {
         })
     })
   )
+  reportErrors(importer, constructed.errors, { marksItemInvalid: true })
   const validated = await util.settle(
     constructed.results.map(item =>
       validation.validate(importer, item)
     )
   )
+  reportErrors(importer, validated.errors, { marksItemInvalid: true })
   await util.settle(
     validated.results.map(item =>
       firestore.save(
@@ -299,14 +365,23 @@ export const upload = async (importer: EventImporter) => {
   importer.progress = updateProgress('savingToDatabase')
   await uploadLoading(importer, [
     () => saveLanguages(importer),
-    () => saveSessions(importer),
     () => saveVenues(importer),
     () => savePerformers(importer),
+    () => saveSessions(importer),
+    () => deleteUnreferenced(importer),
   ])
   importer.progress = updateProgress('finished')
   importer.endAt = new Date()
   importer.endTime = new Date()
   await saveImporterState(importer)
+}
+export const reportErrors = (importer: EventImporter, items: errors.ImportError[], opts?: { marksItemInvalid?: true}) => {
+  items.forEach(item => {
+    importer.errors.push(item)
+    if (opts?.marksItemInvalid && item.item) {
+      importer.invalidEntity[item.item.type][item.item.id] = item.item
+    }
+  })
 }
 
 /**
@@ -334,6 +409,11 @@ async function populateId<TItemType extends Item['type']>(importer: EventImporte
   const ids = Array.isArray(id) ? id : [id]
   const result = await util.settle(
     ids.map(async id => {
+      if (importer.invalidEntity[ent][id]) {
+        // TODO Raise warning of referencing invalid entity
+        importer.warnings.push(errors.createImportError(importer, errors.INVALID_ITEM_REFERENCE))
+        return
+      }
       const languageData = await importer.store.get(`${ent}:${id}:${lang}`)
       const defualtLanguageData = await await importer.store.get(`${ent}:${id}:${importer.settings.defaultLanguage}`)
       return util.defaults(
@@ -342,7 +422,9 @@ async function populateId<TItemType extends Item['type']>(importer: EventImporte
       ) as Item & { type: typeof ent }
     })
   )
-  return Array.isArray(id) ? result.results.filter(x => x) : result.results[0]
+  return Array.isArray(id)
+    ? result.results.filter(x => x).map(x => x!)
+    : result.results[0]
 }
 
 export const createMemoryStore = () => {
