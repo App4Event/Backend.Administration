@@ -66,5 +66,7 @@ node_modules/
 .env
 
 src/generated
+!src/generated/openapi/openapi.json
+!src/generated/types/openapi.ts
 
 lib

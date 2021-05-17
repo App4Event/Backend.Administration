@@ -1,4 +1,3 @@
-import * as config from '../config'
 import got from 'got'
 import * as util from './util'
 
@@ -55,11 +54,11 @@ export const getImage = async (fc: FilmChiefConnection, imageId: number) => {
   }
 }
 
-export const connectFilmChief = async (settings?: Partial<config.Config['filmChief']>) => {
-  const apiKey = settings?.apiKey ?? config.default.filmChief.apiKey
+export const connectFilmChief = async (settings: { apiKey: string, baseUrl: string, festivalIdentifier: string }) => {
+  const apiKey = settings?.apiKey
   const festivalIdentifier =
-    settings?.festivalIdentifier ?? config.default.filmChief.festivalIdentifier
-  const baseUrl = settings?.baseUrl ?? config.default.filmChief.baseUrl
+    settings?.festivalIdentifier
+  const baseUrl = settings?.baseUrl
 
   const url = `https://${festivalIdentifier}.${baseUrl}/api/php`
   const { body } = await got<any>(url, {

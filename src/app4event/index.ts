@@ -1,6 +1,6 @@
 import * as http from 'http'
 import * as eventImport from './event-import'
-
+import * as firestore from './firestore'
 export * from './entity'
 export { EventImporter, Item as ImportItem, sanitizeCustomFields } from './event-import'
 export * as filmchief from './filmchief'
@@ -20,7 +20,9 @@ export const createBackend = (settings: {
       res.end()
     },
     onImportCreated: async (snap: { data: () => any }) => {
-      const i: eventImport.EventImporter = (await snap.data())
+      const state: eventImport.SavedState = (await snap.data())
+      const parsedState = firestore.revertFirestoreKeys(state, { dates: ['endAt', 'endTime', 'startAt', 'startTime'] })
+      const i = await eventImport.createImporterFromState(settings.event, parsedState)
       await eventImport.startLoading(i, settings.import)
     },
     runImport: async (subsettings?: Pick<eventImport.Settings, 'trackOnlyDataInFirestore'>) => {
@@ -28,6 +30,7 @@ export const createBackend = (settings: {
         ...settings.event,
         ...subsettings,
       })
+      // TODO use createImporterFromState to make sure it works fine
       await eventImport.startLoading(i, settings.import)
     },
   }

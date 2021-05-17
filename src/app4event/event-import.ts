@@ -36,6 +36,31 @@ export const createImporter = async (settings: Settings) => {
   return i
 }
 
+export const createImporterFromState = async (settings: Settings, state: Partial<SavedState>) => {
+  const f = firestore.connectFirestore()
+  const i = {
+    importId: state.importId ?? '',
+    settings,
+    store: settings.store ?? createMemoryStore(),
+    startTime: state.startTime ?? new Date(),
+    endTime: state.endTime ?? undefined as Date | undefined,
+    progress: updateProgress('ready'),
+    firestore: f,
+    trackOnlyDataInFirestore: settings.trackOnlyDataInFirestore ?? false,
+    startAt: state.startAt ?? new Date(),
+    endAt: state.endAt ?? undefined as Date | undefined,
+    errors: [] as Error[],
+    warnings: [] as Error[],
+    invalidEntity: {
+      session: {} as Record<string, Item & { type: 'session' }>,
+      performer: {} as Record<string, Item & { type: 'performer' }>,
+      venue: {} as Record<string, Item & { type: 'venue' }>,
+    },
+  }
+  await saveImporterState(i)
+  return i
+}
+
 export const deleteUnreferenced = async (importer: EventImporter) => {
   await pruneLanguagesCollection('performer')
   await pruneLanguagesCollection('session')
@@ -89,6 +114,8 @@ export const createImport = async (importer: EventImporter) => {
   return i
 }
 
+export type SavedState = util.Unpromise<ReturnType<typeof saveImporterState>>
+
 const saveImporterState = async (importer: EventImporter) => {
   const finished = importer.progress >= 1 ||
     // Loading data failure means no data, therefore no import
@@ -107,6 +134,7 @@ const saveImporterState = async (importer: EventImporter) => {
     .join(', ') || 'No warnings'
 
   const state = {
+    importId: importer.importId,
     isImportInProcess: !finished,
     importInProgress: !finished,
     progress,
@@ -129,6 +157,7 @@ const saveImporterState = async (importer: EventImporter) => {
       firestore.convertFirstoreKeys(state, { dates: ['endAt', 'endTime', 'startAt', 'startTime'] })
     ),
   ])
+  return state
 }
 
 function updateProgress(stage: 'savingToDatabase', opts?: { step: number, maxSteps: number}): number

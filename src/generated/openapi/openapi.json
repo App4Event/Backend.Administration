@@ -1,0 +1,193 @@
+{
+  "openapi" : "3.0.0",
+  "info" : {
+    "title" : "app4event",
+    "version" : "1.0"
+  },
+  "servers" : [ {
+    "url" : "/"
+  } ],
+  "paths" : {
+    "/import" : {
+      "post" : {
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "Language" : {
+        "properties" : {
+          "id" : {
+            "description" : "Language code, e.g. `cs`",
+            "type" : "string"
+          },
+          "isDefault" : {
+            "type" : "boolean"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "isDefault", "name" ],
+        "type" : "object"
+      },
+      "Link" : {
+        "properties" : {
+          "type" : {
+            "enum" : [ "unknown", "HTTP", "FACEBOOK", "TWITTER", "YOUTUBE", "VIMEO", "SOUNDCLOUD", "LINKEDIN", "CSFD", "IMDB", "INSTAGRAM" ],
+            "type" : "string"
+          },
+          "link" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "type" ],
+        "type" : "object"
+      },
+      "Performer" : {
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "images" : {
+            "items" : {
+              "$ref" : "#/components/schemas/Image"
+            },
+            "type" : "array"
+          },
+          "customFields" : {
+            "items" : {
+              "$ref" : "#/components/schemas/CustomField"
+            },
+            "type" : "array"
+          },
+          "sessionIds" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "venueIds" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "id", "name", "sessionIds", "venueIds" ],
+        "type" : "object"
+      },
+      "Venue" : {
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "order" : {
+            "type" : "number"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "color" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name", "order" ],
+        "type" : "object"
+      },
+      "Session" : {
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "performerIds" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "performerNames" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "venueId" : {
+            "type" : "string"
+          },
+          "venueName" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "timeFrom" : {
+            "type" : "string"
+          },
+          "timeTo" : {
+            "type" : "string"
+          },
+          "hasParent" : {
+            "type" : "boolean"
+          },
+          "subsessionIds" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "likes" : {
+            "type" : "number"
+          },
+          "forcedSessionDetail" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "hasParent", "id", "performerIds", "performerNames", "subsessionIds", "timeFrom", "timeTo", "venueId", "venueName" ],
+        "type" : "object"
+      },
+      "CustomField" : {
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "value" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "Image" : {
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "uri" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      }
+    }
+  }
+}

@@ -77,6 +77,22 @@ export const convertFirstoreKeys = <TItem extends Record<string, any>, TKey exte
   }
 }
 
+export const revertFirestoreKeys = <TItem extends Record<string, any>, TKey extends keyof TItem>(item: TItem, settings: {
+  dates: TKey[]
+}) => {
+  // TBA: Geolocation overrides
+  const datesOverride = settings.dates.reduce((override, prop) => {
+    return {
+      ...override,
+      [prop]: (item[prop] as firebaseAdmin.firestore.Timestamp)?.toDate?.() ?? null,
+    }
+  }, {})
+  return {
+    ...item,
+    ...datesOverride,
+  }
+}
+
 export const deleteCollectionDocumentsByIds = async (conn: FirestoreConnection, collectionName: string, ids: string[]) => {
   await util.chunk(ids, 100)
     .reduce(async (last, ids) => {
