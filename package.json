@@ -1,5 +1,6 @@
 {
   "name": "app4event-backend",
+  "version": "0.0.0",
   "scripts": {
     "build": "npm run build-static && npx tsc",
     "lint": "eslint '**/*.ts' -f codeframe",
