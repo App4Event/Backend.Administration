@@ -183,6 +183,14 @@ export const addItem = async (importer: EventImporter, item: Item) => {
         })
     )
   }
+  if (item.type === 'session' && item.data.subsessionIds?.length) {
+    await Promise.all(
+      item.data.subsessionIds.map(async subsessionId => {
+        const key = `session2parent:${subsessionId}`
+        await addUniq(key, item.data.id)
+      })
+    )
+  }
   async function addUniq(key: string, value?: Item['id']) {
     if (value === undefined) return importer.store.get(key)
     const currentValue = (importer.store as any).store.get(key)
@@ -312,18 +320,22 @@ const saveSessions = async (importer: EventImporter) => {
           if (!data) throw errors.createImportError(importer, errors.NO_ITEM_DATA)
           const performers = await populateId(importer, 'performer', data?.data.performerIds, languageCode)
           const venue = await populateId(importer, 'venue', data?.data.venueId, languageCode)
-          const subsessionIds: string[] = [] // TODO
+          const subsessionIds = (await populateId(importer, 'session', data?.data.subsessionIds, languageCode))
+            ?.map(x => x.id) ?? []
+          const parentIds: Array<Item['id']> = await importer.store.get(`session2parent:${id}`) ?? []
+          const parents = await populateId(importer, 'session', parentIds, languageCode)
           const performerNames = util.pluck(performers, x => x.data.name)
           const performerIds = util.pluck(performers, x => x.data.id)
           const venueName = venue?.data.name
           const venueId = venue?.id
+          const parent = parents[0]
           return {
             ...data,
             language: languageCode,
             data: {
               ...data?.data,
               id,
-              hasParent: false, // TODO
+              hasParent: !!parent,
               subsessionIds,
               performerIds,
               performerNames,
