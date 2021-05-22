@@ -6,6 +6,7 @@ export type Performer = openapi.types.components['schemas']['Performer']
 export type Session = openapi.types.components['schemas']['Session']
 export type CustomField = openapi.types.components['schemas']['CustomField']
 export type Image = openapi.types.components['schemas']['Image']
+export type News = openapi.types.components['schemas']['News']
 
 // interface HttpImage {
 //   uri: string

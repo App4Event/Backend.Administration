@@ -163,3 +163,15 @@ components:
           type: string
         uri:
           type: string
+    News:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        time:
+          type: string
+        # images

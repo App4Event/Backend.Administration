@@ -77,6 +77,12 @@ export interface components {
       id?: string;
       uri?: string;
     };
+    News: {
+      id?: string;
+      title?: string;
+      body?: string;
+      time?: string;
+    };
   };
 }
 
