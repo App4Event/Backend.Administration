@@ -20,11 +20,11 @@ export const createBackend = (settings: {
 }) => {
   return {
     probe,
-    onImportRequest: async (_req: http.IncomingMessage, res: http.ServerResponse) => {
+    onImportRequest: cors(async (_req: http.IncomingMessage, res: http.ServerResponse) => {
       const i = await eventImport.createImporter(settings.event)
       await eventImport.createImport(i)
       res.end()
-    },
+    }),
     onImportCreated: async (snap: { data: () => any }) => {
       const state: eventImport.SavedState = (await snap.data())
       const parsedState = firestore.revertFirestoreKeys(state, { dates: ['endAt', 'endTime', 'startAt', 'startTime'] })
@@ -42,5 +42,16 @@ export const createBackend = (settings: {
       // TODO use createImporterFromState to make sure it works fine
       await eventImport.startLoading(i, settings.import)
     },
+  }
+}
+
+function cors<T>(cb: (req: http.IncomingMessage, res: http.ServerResponse) => T) {
+  return (req: http.IncomingMessage, res: http.ServerResponse) => {
+    res.setHeader('Access-Control-Allow-Origin', '*')
+    if (req.method?.toLocaleLowerCase() === 'options') {
+      res.end()
+      return
+    }
+    return cb(req, res)
   }
 }
