@@ -2,7 +2,6 @@ import * as http from 'http'
 import * as eventImport from './event-import'
 import * as firestore from './firestore'
 import * as pushNotifs from './push-notifs'
-import * as pushNotifsProbe from './push-notifs-probe'
 export * from './entity'
 export { EventImporter, Item as ImportItem, sanitizeCustomFields } from './event-import'
 export * as filmchief from './filmchief'
@@ -12,7 +11,7 @@ export * as util from './util'
 export { eventImport }
 
 // TODO Ha! What are you going to do when there are more probes?
-export const probe = pushNotifsProbe
+export const probe = pushNotifs.probe
 
 export const createBackend = (settings: {
   event: eventImport.Settings,
@@ -35,10 +34,16 @@ export const createBackend = (settings: {
       await pushNotifs.onNewsCreated(newsId, langCode, newsData)
     },
     runImport: async (subsettings?: Pick<eventImport.Settings, 'trackOnlyDataInFirestore'>) => {
-      const i = await eventImport.createImporter({
+      const importerSettings: eventImport.Settings = {
         ...settings.event,
         ...subsettings,
-      })
+      }
+      let i = await eventImport.createImporter(importerSettings)
+      if (!subsettings?.trackOnlyDataInFirestore) {
+        const result = await eventImport.createImport(i)
+        i.importId = result.importId
+      }
+      i = await eventImport.createImporterFromState(importerSettings, i)
       // TODO use createImporterFromState to make sure it works fine
       await eventImport.startLoading(i, settings.import)
     },

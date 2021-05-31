@@ -27,12 +27,19 @@ export const path = {
       .replace('{id}', id),
   '/imports': () => 'imports',
   '/imports/{id}': ({ id }: { id: string }) => '/imports/{id}'.replace('{id}', id),
+  '/imports/{id}/logs': ({ id }: { id: string }) => '/imports/{id}/logs'.replace('{id}', id),
 }
 
 export const save = async (conn: FirestoreConnection, path: string, doc: any) => {
   const cleanedDoc = lodash.omitBy(doc, lodash.isUndefined)
   if (lodash.isEmpty(cleanedDoc)) return
   await conn.firestore.doc(path).set(cleanedDoc, { merge: true })
+}
+
+export const add = async (conn: FirestoreConnection, path: string, doc: any) => {
+  const cleanedDoc = lodash.omitBy(doc, lodash.isUndefined)
+  if (lodash.isEmpty(cleanedDoc)) return
+  await conn.firestore.collection(path).add(doc)
 }
 
 export const getCollectionDocumentIds = async (conn: FirestoreConnection, collectionName: string) => {

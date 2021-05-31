@@ -1,4 +1,5 @@
 import * as lodash from 'lodash'
+import * as events from 'events'
 
 export { chunk, difference, uniq, memoize, countBy } from 'lodash'
 
@@ -71,4 +72,24 @@ export const createDate = (value: any) => {
   if (!value) return
   const t = new Date(value)
   return isNaN(t.getTime()) ? undefined : t
+}
+
+export const createDomainProbe = <TEventToCreateData extends { [key: string]: (data: any) => any }>(eventToCreateData: TEventToCreateData) => {
+  const ee = new events.EventEmitter()
+  type Event = keyof TEventToCreateData
+  type EventData = TEventToCreateData[Event]
+  const emitMethods = (Object.keys(eventToCreateData) as Event[])
+      .reduce((method, event) => ({
+        ...method,
+        [event]: (data: EventData) => ee.emit(event as string, eventToCreateData[event](data)),
+      // eslint-disable-next-line
+      }), {} as { [key in Event]: (...params: Parameters<EventData>) => ReturnType<typeof ee.emit> })
+  return {
+      ...emitMethods,
+      on: (e: Event, cb: (data: any) => any) => {
+        // TODO Would be better to return the return variable, but see todo below
+        ee.on(e as string, cb)
+      },
+      ee: ee as any /* TODO This breaks the code usage.. Exported variable 'probe' has or is using name 'EventEmitter' from external module "events" but cannot be named.ts(4023) */,
+  }
 }

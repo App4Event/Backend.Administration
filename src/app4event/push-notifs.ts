@@ -1,6 +1,12 @@
 import * as firebaseAdmin from 'firebase-admin'
 import * as entity from '../app4event/entity'
-import * as probe from './push-notifs-probe'
+import * as util from './util'
+
+export const probe = util.createDomainProbe({
+    newsCreated: (e: { id: string, languageCode: string, data: any }) => e,
+    noPushDueToEmptyData: () => undefined,
+    notificationSent: (e: { languageCode: string, request: firebaseAdmin.messaging.MessagingPayload }) => e,
+})
 
 export const onNewsCreated = async (id: string, languageCode: string, news: entity.News) => {
     probe.newsCreated({ id, languageCode, data: news })

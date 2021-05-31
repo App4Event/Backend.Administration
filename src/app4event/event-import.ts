@@ -6,6 +6,70 @@ import * as uuid from 'uuid'
 import * as validation from './validation'
 import * as errors from './errors'
 
+const probe = (() => {
+  const addFirestoreLog = async (importer: EventImporter, message: string, severity: 'INFO' | 'ERROR') => {
+    await (!importer.settings.trackOnlyDataInFirestore && importer.importId && firestore.add(
+      importer.firestore,
+      firestore.path['/imports/{id}/logs']({ id: importer.importId }),
+      firestore.convertFirstoreKeys({
+        timestamp: new Date(),
+        severity,
+        message: message,
+      }, { dates: ['timestamp'] })
+    ))
+  }
+  return util.createDomainProbe({
+    importStarted: (importer: EventImporter) => {
+      void addFirestoreLog(importer, 'Import started', 'INFO')
+    },
+    savingVenues: (importer: EventImporter) => {
+      void importer.store.get('venue-ids')
+        .then(async (ids: string[]) => {
+          await addFirestoreLog(importer, `Saving ${ids?.length} venues`, 'INFO')
+        })
+    },
+    venuesSaved: (importer: EventImporter) => {
+      const invalidCount = Object.keys(importer.invalidEntity.venue).length
+      if (invalidCount) {
+        void addFirestoreLog(importer, `${invalidCount} invalid venues`, 'ERROR')
+      }
+    },
+    savingLanguages: (importer: EventImporter) => {
+      void addFirestoreLog(importer, 'Saving languages', 'INFO')
+    },
+    savingPerformers: (importer: EventImporter) => {
+      void importer.store.get('performer-ids')
+      .then(async (ids: string[]) => {
+        await addFirestoreLog(importer, `Saving ${ids?.length} performers`, 'INFO')
+      })
+    },
+    performersSaved: (importer: EventImporter) => {
+      const invalidCount = Object.keys(importer.invalidEntity.performer).length
+      if (invalidCount) {
+        void addFirestoreLog(importer, `${invalidCount} invalid performers`, 'ERROR')
+      }
+    },
+    savingSessions: (importer: EventImporter) => {
+      void importer.store.get('session-ids')
+      .then(async (ids: string[]) => {
+        await addFirestoreLog(importer, `Saving ${ids?.length} sessions`, 'INFO')
+      })
+    },
+    sessionsSaved: (importer: EventImporter) => {
+      const invalidCount = Object.keys(importer.invalidEntity.session).length
+      if (invalidCount) {
+        void addFirestoreLog(importer, `${invalidCount} invalid sessions`, 'ERROR')
+      }
+    },
+    deletingUnreferencedDocuments: (importer: EventImporter) => {
+      void addFirestoreLog(importer, 'Deleting unreferenced documents', 'INFO')
+    },
+    importFinished: (importer: EventImporter) => {
+      void addFirestoreLog(importer, 'Import finished', 'INFO')
+    },
+  })
+})()
+
 export const createImporter = async (settings: Settings) => {
   /* eslint-disable @typescript-eslint/consistent-type-assertions */
 
@@ -57,11 +121,13 @@ export const createImporterFromState = async (settings: Settings, state: Partial
       venue: {} as Record<string, Item & { type: 'venue' }>,
     },
   }
+  probe.importStarted(i)
   await saveImporterState(i)
   return i
 }
 
 export const deleteUnreferenced = async (importer: EventImporter) => {
+  probe.deletingUnreferencedDocuments(importer)
   await pruneLanguagesCollection('performer')
   await pruneLanguagesCollection('session')
   await pruneLanguagesCollection('venue')
@@ -239,6 +305,7 @@ export const addItems = async (importer: EventImporter, items: Item[]) => {
 }
 
 const saveLanguages = async (importer: EventImporter) => {
+  probe.savingLanguages(importer)
   const records: entity.Language[] = importer.settings.languages
     .map(languageCode => ({
       isDefault: languageCode === importer.settings.defaultLanguage,
@@ -255,6 +322,7 @@ const saveLanguages = async (importer: EventImporter) => {
 }
 
 const saveVenues = async (importer: EventImporter) => {
+  probe.savingVenues(importer)
   const ids: Array<Item['id']> = (await importer.store.get('venue-ids')) || []
   const constructed = await util.settle(
     ids.flatMap(id => {
@@ -290,9 +358,11 @@ const saveVenues = async (importer: EventImporter) => {
       )
     )
   )
+  probe.venuesSaved(importer)
 }
 
 const savePerformers = async (importer: EventImporter) => {
+  probe.savingPerformers(importer)
   const ids: Array<Item['id']> = (await importer.store.get('performer-ids')) || []
   const constructed = await util.settle(
     ids.flatMap(id => {
@@ -337,9 +407,11 @@ const savePerformers = async (importer: EventImporter) => {
       )
     )
   )
+  probe.performersSaved(importer)
 }
 
 const saveSessions = async (importer: EventImporter) => {
+  probe.savingSessions(importer)
   const ids: Array<Item['id']> = (await importer.store.get('session-ids')) || []
   const constructed = await util.settle(
     ids.flatMap(id => {
@@ -391,9 +463,10 @@ const saveSessions = async (importer: EventImporter) => {
       )
     )
   )
+  probe.sessionsSaved(importer)
 }
 
-const uploadLoading = (importer: EventImporter, tasks: Array<() => Promise<any>>) => {
+const uploadLoading = (importer: EventImporter, tasks: Array<() => Promise<any> | any>) => {
   return tasks.reduce(async (last, task, i) => {
     await last
     importer.progress = updateProgress('savingToDatabase', { step: i + 1, maxSteps: tasks.length })
@@ -411,6 +484,7 @@ export const upload = async (importer: EventImporter) => {
     () => saveSessions(importer),
     () => deleteUnreferenced(importer),
   ])
+  probe.importFinished(importer)
   importer.progress = updateProgress('finished')
   importer.endAt = new Date()
   importer.endTime = new Date()
