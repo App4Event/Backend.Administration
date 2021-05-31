@@ -210,6 +210,8 @@ const saveImporterState = async (importer: EventImporter) => {
     endAt: importer.endAt,
     errorSummary,
     warningSummary,
+    /** Legacy id attribute for FE to display logs */
+    id: importer.importId,
   }
   await Promise.allSettled([
     firestore.save(
