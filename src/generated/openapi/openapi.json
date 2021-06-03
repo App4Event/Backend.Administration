@@ -42,7 +42,7 @@
             "enum" : [ "unknown", "HTTP", "FACEBOOK", "TWITTER", "YOUTUBE", "VIMEO", "SOUNDCLOUD", "LINKEDIN", "CSFD", "IMDB", "INSTAGRAM" ],
             "type" : "string"
           },
-          "link" : {
+          "uri" : {
             "type" : "string"
           }
         },

@@ -603,12 +603,12 @@ export const sanitizeCustomFields = (items?: Array<{ name?: any, value?: any }>)
     .filter(x => x.name && x.value)
 }
 
-export const sanitizeLinks = (items?: Array<{ type?: any, link?: any }>): entity.Link[] => {
+export const sanitizeLinks = (items?: Array<{ type?: any, uri?: any }>): entity.Link[] => {
   if (!items) return []
   return items
     .map(x => ({
       type: x.type ? String(x.type) : '' as any,
-      link: x.link ? String(x.link) : '',
+      uri: x.uri ? String(x.uri) : '',
     }))
-    .filter(x => x.type && x.link)
+    .filter(x => x.type && x.uri)
 }

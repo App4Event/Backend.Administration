@@ -35,7 +35,7 @@ export interface components {
         | "CSFD"
         | "IMDB"
         | "INSTAGRAM";
-      link?: string;
+      uri?: string;
     };
     Performer: {
       id: string;

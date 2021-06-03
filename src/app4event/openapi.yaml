@@ -41,7 +41,7 @@ components:
             - CSFD
             - IMDB
             - INSTAGRAM
-        link:
+        uri:
           type: string
       required:
         - type
