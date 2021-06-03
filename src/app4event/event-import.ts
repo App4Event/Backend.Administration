@@ -562,19 +562,20 @@ export const createMemoryStore = () => {
   }
 }
 
-export interface Performer {
+export type Venue = Item & { type: 'venue' }
+export type Session = Item & { type: 'session' }
+export type Performer = Item & { type: 'performer' }
+
+export type Item = { id: string; type: string; language: string; } & ({
   type: 'performer'
-  data: Partial<entity.Performer> & Pick<entity.Performer, 'id'>
-}
-export interface Session {
+  data: Partial<Omit<entity.Performer, 'venueIds' /* Venue IDs are derived during import from related sessions */>> & Pick<entity.Performer, 'id'>
+} | {
   type: 'session'
-  data: Partial<entity.Session> & Pick<entity.Session, 'id'>
-}
-export interface Venue {
+  data: Partial<Omit<entity.Session, 'venueName' | 'performerNames' /* Venue name, performer names are derived during import from related venue/performer */>> & Pick<entity.Session, 'id'>
+} | {
   type: 'venue'
   data: Partial<entity.Venue> & Pick<entity.Venue, 'id'>
-}
-export type Item = { id: string; type: string; language: string; } & (Performer | Session | Venue)
+})
 export interface Settings {
   /** cs, en, ... */
   languages: string[]
