@@ -327,7 +327,7 @@ const saveVenues = async (importer: EventImporter) => {
   probe.savingVenues(importer)
   const ids: Array<Item['id']> = (await importer.store.get('venue-ids')) || []
   const constructed = await util.settle(
-    ids.flatMap(id => {
+    ids.flatMap((id, i) => {
       return importer.settings.languages
         .flatMap(async languageCode => {
           const item = await populateId(importer, 'venue', id, languageCode)
@@ -338,6 +338,7 @@ const saveVenues = async (importer: EventImporter) => {
             data: {
               ...item?.data,
               id,
+              order: i,
             },
           }
         })
