@@ -379,6 +379,7 @@ const savePerformers = async (importer: EventImporter) => {
           const venues = await populateId(importer, 'venue', referencedVenueIds, languageCode)
           const venueIds = util.pluck(venues, x => x.id)
           const customFields = sanitizeCustomFields(item.data.customFields)
+          const links = sanitizeLinks(item.data.links)
           return {
             ...item,
             language: languageCode,
@@ -388,6 +389,7 @@ const savePerformers = async (importer: EventImporter) => {
               sessionIds,
               venueIds,
               customFields,
+              links,
             },
           }
         })
@@ -595,4 +597,14 @@ export const sanitizeCustomFields = (items?: Array<{ name?: any, value?: any }>)
       value: x.value ? String(x.value) : '',
     }))
     .filter(x => x.name && x.value)
+}
+
+export const sanitizeLinks = (items?: Array<{ type?: any, link?: any }>): entity.Link[] => {
+  if (!items) return []
+  return items
+    .map(x => ({
+      type: x.type ? String(x.type) : '' as any,
+      link: x.link ? String(x.link) : '',
+    }))
+    .filter(x => x.type && x.link)
 }

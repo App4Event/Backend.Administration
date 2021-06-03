@@ -46,6 +46,7 @@ export interface components {
       customFields?: components["schemas"]["CustomField"][];
       sessionIds: string[];
       venueIds: string[];
+      links?: components["schemas"]["Link"][];
     };
     Venue: {
       id: string;
@@ -53,6 +54,7 @@ export interface components {
       order: number;
       description?: string;
       color?: string;
+      location?: components["schemas"]["Location"];
     };
     Session: {
       id: string;
@@ -82,6 +84,10 @@ export interface components {
       title?: string;
       body?: string;
       time?: string;
+    };
+    Location: {
+      lat?: number;
+      lng?: number;
     };
   };
 }

@@ -12,6 +12,7 @@ const validator = new (ajv.default)()
 validator.addSchema(openapi.schema.components.schemas.Image, '#/components/schemas/Image')
 validator.addSchema(openapi.schema.components.schemas.CustomField, '#/components/schemas/CustomField')
 validator.addSchema(openapi.schema.components.schemas.Link, '#/components/schemas/Link')
+validator.addSchema(openapi.schema.components.schemas.Location, '#/components/schemas/Location')
 
 const createCompiledSchemaForType = util.memoize((type: eventImport.Item['type']) => {
     if (type === 'performer') {

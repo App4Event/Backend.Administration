@@ -86,6 +86,12 @@
               "type" : "string"
             },
             "type" : "array"
+          },
+          "links" : {
+            "items" : {
+              "$ref" : "#/components/schemas/Link"
+            },
+            "type" : "array"
           }
         },
         "required" : [ "id", "name", "sessionIds", "venueIds" ],
@@ -107,6 +113,9 @@
           },
           "color" : {
             "type" : "string"
+          },
+          "location" : {
+            "$ref" : "#/components/schemas/Location"
           }
         },
         "required" : [ "id", "name", "order" ],
@@ -201,6 +210,17 @@
           },
           "time" : {
             "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
+      "Location" : {
+        "properties" : {
+          "lat" : {
+            "type" : "number"
+          },
+          "lng" : {
+            "type" : "number"
           }
         },
         "type" : "object"

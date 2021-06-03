@@ -73,7 +73,10 @@ components:
           type: array
           items:
             type: string
-        # links
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
         # updateTime
       required:
         - id
@@ -95,7 +98,8 @@ components:
           type: string
         # links
         # customFields
-        # location
+        location:
+          $ref: '#/components/schemas/Location'
       required:
         - id
         - name
@@ -175,3 +179,10 @@ components:
         time:
           type: string
         # images
+    Location:
+      type: object
+      properties:
+        lat:
+          type: number
+        lng:
+          type: number
