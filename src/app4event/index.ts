@@ -3,22 +3,20 @@ import * as eventImport from './event-import'
 import * as firestore from './firestore'
 import * as pushNotifs from './push-notifs'
 export * from './entity'
-export { EventImporter, Item as ImportItem, sanitizeCustomFields } from './event-import'
+export { EventImporter, Item as ImportItem, Performer as ImportPerformer, Venue as ImportVenue, Session as ImportSession, sanitizeCustomFields } from './event-import'
 export * as filmchief from './filmchief'
 export { FilmChiefConnection } from './filmchief'
 export { onImportCreated, onImportRequest } from './functions'
 export * as util from './util'
 export { eventImport }
 
-// TODO Ha! What are you going to do when there are more probes?
-export const probe = pushNotifs.probe
-
 export const createBackend = (settings: {
   event: eventImport.Settings,
   import: (i: eventImport.EventImporter) => Promise<void>
 }) => {
   return {
-    probe,
+    importProbe: eventImport.probe,
+    notificationProbe: pushNotifs.probe,
     onImportRequest: cors(async (_req: http.IncomingMessage, res: http.ServerResponse) => {
       const i = await eventImport.createImporter(settings.event)
       await eventImport.createImport(i)

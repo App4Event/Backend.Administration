@@ -6,7 +6,7 @@ import * as uuid from 'uuid'
 import * as validation from './validation'
 import * as errors from './errors'
 
-const probe = (() => {
+export const probe = (() => {
   const addFirestoreLog = async (importer: EventImporter, message: string, severity: 'INFO' | 'ERROR') => {
     await (!importer.settings.trackOnlyDataInFirestore && importer.importId && firestore.add(
       importer.firestore,
@@ -19,6 +19,7 @@ const probe = (() => {
     ))
   }
   return util.createDomainProbe({
+    loadingDataFailed: (error: Error) => error,
     importStarted: (importer: EventImporter) => {
       void addFirestoreLog(importer, 'Import started', 'INFO')
     },
@@ -518,6 +519,7 @@ export const startLoading = async (importer: EventImporter, load: (importer: Eve
     await load(importer)
   } catch (error) {
     importer.errors.push(errors.createImportError(importer, errors.LOADING_DATA_FAILED))
+    probe.loadingDataFailed(error)
     await saveImporterState(importer)
   }
 }
