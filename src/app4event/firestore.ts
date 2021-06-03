@@ -69,10 +69,16 @@ export const getCollectionDocumentIds = async (conn: FirestoreConnection, collec
  * @returns
  */
 export const convertFirstoreKeys = <TItem extends Record<string, any>, TKey extends keyof TItem>(item: TItem, settings: {
-  dates: TKey[]
+  dates?: TKey[];
+  geoPoints?: TKey[];
 }) => {
-  // TBA: Geolocation overrides
-  const datesOverride = settings.dates.reduce((override, prop) => {
+  const gpsOverride = settings.geoPoints?.reduce((override, prop) => {
+    return {
+      ...override,
+      [prop]: objectToGeo(item[prop]),
+    }
+  }, {})
+  const datesOverride = settings.dates?.reduce((override, prop) => {
     return {
       ...override,
       [prop]: util.createDate(item[prop]) ?? null,
@@ -81,6 +87,15 @@ export const convertFirstoreKeys = <TItem extends Record<string, any>, TKey exte
   return {
     ...item,
     ...datesOverride,
+    ...gpsOverride,
+  }
+  function objectToGeo(object: { lat: any, lng: any }) {
+    if (isNaN(Number(object.lat)) || isNaN(Number(object.lng))) {
+      return null
+    }
+    const lat = Number(object.lat)
+    const lng = Number(object.lng)
+    return new firebaseAdmin.firestore.GeoPoint(lat, lng)
   }
 }
 

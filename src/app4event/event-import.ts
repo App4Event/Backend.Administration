@@ -357,7 +357,7 @@ const saveVenues = async (importer: EventImporter) => {
       firestore.save(
         importer.firestore,
         firestore.path['/languages/{lang}/venues/{id}']({ lang: item.language, id: item.id }),
-        item.data
+        firestore.convertFirstoreKeys(item.data, { geoPoints: ['location'] })
       )
     )
   )
