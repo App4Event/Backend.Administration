@@ -64,7 +64,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CustomField'
-        # tags
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
         sessionIds:
           type: array
           items:
@@ -186,3 +189,5 @@ components:
           type: number
         lng:
           type: number
+    Tag:
+      type: string

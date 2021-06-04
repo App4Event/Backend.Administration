@@ -44,6 +44,7 @@ export interface components {
       description?: string;
       images?: components["schemas"]["Image"][];
       customFields?: components["schemas"]["CustomField"][];
+      tags?: components["schemas"]["Tag"][];
       sessionIds: string[];
       venueIds: string[];
       links?: components["schemas"]["Link"][];
@@ -89,6 +90,7 @@ export interface components {
       lat?: number;
       lng?: number;
     };
+    Tag: string;
   };
 }
 
