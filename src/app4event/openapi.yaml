@@ -189,5 +189,36 @@ components:
           type: number
         lng:
           type: number
+    Group:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          type: string
+          enum:
+            - PERFORMER
+            - SESSION
+        performerIds:
+          type: array
+          items:
+            type: string
+        sessionIds:
+          type: array
+          items:
+            type: string
+        description:
+          type: string
+        order:
+          type: number
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
+      required:
+        - name
+        - type
     Tag:
       type: string

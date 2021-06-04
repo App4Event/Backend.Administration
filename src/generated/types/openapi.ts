@@ -90,6 +90,16 @@ export interface components {
       lat?: number;
       lng?: number;
     };
+    Group: {
+      id?: string;
+      name: string;
+      type: "PERFORMER" | "SESSION";
+      performerIds?: string[];
+      sessionIds?: string[];
+      description?: string;
+      order?: number;
+      images?: components["schemas"]["Image"][];
+    };
     Tag: string;
   };
 }

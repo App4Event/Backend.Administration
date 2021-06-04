@@ -16,6 +16,7 @@ export const path = {
   '/languages/{lang}/performers': ({ lang }: { lang: string }) => '/languages/{lang}/performers'.replace('{lang}', lang),
   '/languages/{lang}/sessions': ({ lang }: { lang: string }) => '/languages/{lang}/sessions'.replace('{lang}', lang),
   '/languages/{lang}/venues': ({ lang }: { lang: string }) => '/languages/{lang}/venues'.replace('{lang}', lang),
+  '/languages/{lang}/groups': ({ lang }: { lang: string }) => '/languages/{lang}/groups'.replace('{lang}', lang),
   '/languages/{lang}/performers/{id}': ({ lang, id }: { lang: string; id: string; }) => '/languages/{lang}/performers/{id}'
     .replace('{lang}', lang)
     .replace('{id}', id),
@@ -25,6 +26,13 @@ export const path = {
     '/languages/{lang}/sessions/{id}': ({ lang, id }: { lang: string; id: string; }) => '/languages/{lang}/sessions/{id}'
       .replace('{lang}', lang)
       .replace('{id}', id),
+  '/languages/{lang}/groups/{id}': ({ lang, id }: { lang: string; id: string; }) => '/languages/{lang}/groups/{id}'
+    .replace('{lang}', lang)
+    .replace('{id}', id),
+  '/languages/{lang}/groups/{groupId}/items/{id}': ({ lang, id, groupId }: { groupId: string, lang: string; id: string; }) => '/languages/{lang}/groups/{groupId}/items/{id}'
+    .replace('{lang}', lang)
+    .replace('{id}', id)
+    .replace('{groupId}', groupId),
   '/imports': () => 'imports',
   '/imports/{id}': ({ id }: { id: string }) => '/imports/{id}'.replace('{id}', id),
   '/imports/{id}/logs': ({ id }: { id: string }) => '/imports/{id}/logs'.replace('{id}', id),

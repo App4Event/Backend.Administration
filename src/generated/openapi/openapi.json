@@ -231,6 +231,46 @@
         },
         "type" : "object"
       },
+      "Group" : {
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "type" : {
+            "enum" : [ "PERFORMER", "SESSION" ],
+            "type" : "string"
+          },
+          "performerIds" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "sessionIds" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "order" : {
+            "type" : "number"
+          },
+          "images" : {
+            "items" : {
+              "$ref" : "#/components/schemas/Image"
+            },
+            "type" : "array"
+          }
+        },
+        "required" : [ "name", "type" ],
+        "type" : "object"
+      },
       "Tag" : {
         "type" : "string"
       }

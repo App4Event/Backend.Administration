@@ -23,6 +23,7 @@ export const probe = (() => {
     importStarted: (importer: EventImporter) => {
       void addFirestoreLog(importer, 'Import started', 'INFO')
     },
+    // TODO refactor savingX savedX to automated based on item
     savingVenues: (importer: EventImporter) => {
       void importer.store.get('venue-ids')
         .then(async (ids: string[]) => {
@@ -62,6 +63,18 @@ export const probe = (() => {
         void addFirestoreLog(importer, `${invalidCount} invalid sessions`, 'ERROR')
       }
     },
+    savingGroups: (importer: EventImporter) => {
+      void importer.store.get('group-ids')
+      .then(async (ids: string[]) => {
+        await addFirestoreLog(importer, `Saving ${ids?.length} groups`, 'INFO')
+      })
+    },
+    groupsSaved: (importer: EventImporter) => {
+      const invalidCount = Object.keys(importer.invalidEntity.group).length
+      if (invalidCount) {
+        void addFirestoreLog(importer, `${invalidCount} invalid groups`, 'ERROR')
+      }
+    },
     deletingUnreferencedDocuments: (importer: EventImporter) => {
       void addFirestoreLog(importer, 'Deleting unreferenced documents', 'INFO')
     },
@@ -93,6 +106,7 @@ export const createImporter = async (settings: Settings) => {
       session: {} as Record<string, Item & { type: 'session' }>,
       performer: {} as Record<string, Item & { type: 'performer' }>,
       venue: {} as Record<string, Item & { type: 'venue' }>,
+      group: {} as Record<string, Item & { type: 'group' }>,
     },
   }
   await saveImporterState(i)
@@ -120,6 +134,7 @@ export const createImporterFromState = async (settings: Settings, state: Partial
       session: {} as Record<string, Item & { type: 'session' }>,
       performer: {} as Record<string, Item & { type: 'performer' }>,
       venue: {} as Record<string, Item & { type: 'venue' }>,
+      group: {} as Record<string, Item & { type: 'group' }>,
     },
   }
   probe.importStarted(i)
@@ -132,6 +147,7 @@ export const deleteUnreferenced = async (importer: EventImporter) => {
   await pruneLanguagesCollection('performer')
   await pruneLanguagesCollection('session')
   await pruneLanguagesCollection('venue')
+  await pruneLanguagesCollection('group')
 
   async function getKeepIds(ent: Item['type']) {
     const downloadedIds: string[] = await importer.store.get(`${ent}-ids`) ?? []
@@ -143,6 +159,7 @@ export const deleteUnreferenced = async (importer: EventImporter) => {
       performer: firestore.path['/languages/{lang}/performers'],
       session: firestore.path['/languages/{lang}/sessions'],
       venue: firestore.path['/languages/{lang}/venues'],
+      group: firestore.path['/languages/{lang}/groups'],
     }
     return choices[ent]
   }
@@ -281,6 +298,7 @@ export const addItem = async (importer: EventImporter, item: Item) => {
         })
     )
   }
+  // sessions' parent session
   if (item.type === 'session' && item.data.subsessionIds?.length) {
     await Promise.all(
       item.data.subsessionIds.map(async subsessionId => {
@@ -288,6 +306,27 @@ export const addItem = async (importer: EventImporter, item: Item) => {
         await addUniq(key, item.data.id)
       })
     )
+  }
+  // group items
+  if (item.type === 'group') {
+    await Promise.all([
+      ...(item.data.performerIds ?? []).map(async id => {
+        const key = `group2performers:${id}`
+        await addUniq(key, item.data.id)
+      }),
+      ...(item.data.sessionIds ?? []).map(async id => {
+        const key = `group2sessions:${id}`
+        await addUniq(key, item.data.id)
+      }),
+    ])
+  }
+  if (item.type === 'performer' && item.data.groupId) {
+    const key = `group2performers:${item.data.groupId}`
+    await addUniq(key, item.id)
+  }
+  if (item.type === 'session' && item.data.groupId) {
+    const key = `group2sessions:${item.data.groupId}`
+    await addUniq(key, item.id)
   }
   async function addUniq(key: string, value?: Item['id']) {
     if (value === undefined) return importer.store.get(key)
@@ -472,6 +511,96 @@ const saveSessions = async (importer: EventImporter) => {
   probe.sessionsSaved(importer)
 }
 
+const saveGroups = async (importer: EventImporter) => {
+  probe.savingGroups(importer)
+  const ids: Array<Item['id']> = (await importer.store.get('group-ids')) || []
+  const constructedAll = await util.settle(
+    ids.flatMap(id => {
+      return importer.settings.languages
+        .flatMap(async languageCode => {
+          const data = await populateId(importer, 'group', id, languageCode)
+          if (!data) throw errors.createImportError(importer, errors.NO_ITEM_DATA)
+          const sessionIds: Array<Item['id']> = await importer.store.get(`group2sessions:${id}`) ?? []
+          const sessions = await populateId(importer, 'session', sessionIds, languageCode)
+          const performerIds: Array<Item['id']> = await importer.store.get(`group2performers:${id}`) ?? []
+          const performers = await populateId(importer, 'performer', performerIds, languageCode)
+
+          return [
+            sessions.length ? {
+              ...data,
+              language: languageCode,
+              data: {
+                ...data?.data,
+                type: 'SESSION',
+                performerIds: undefined,
+                sessionIds: sessions.map(x => x.id),
+              },
+            } : undefined,
+            performers.length ? {
+              ...data,
+              language: languageCode,
+              data: {
+                ...data?.data,
+                type: 'PERFORMER',
+                sessionIds: undefined,
+                performerIds: performers.map(x => x.id),
+              },
+            } : undefined,
+          ]
+            .filter(x => x)
+            .map(x => x!)
+        })
+    })
+  )
+  const constructed = { ...constructedAll, results: constructedAll.results.flatMap(x => x) }
+  reportErrors(importer, constructed.errors, { marksItemInvalid: true })
+  const validated = await util.settle(
+    constructed.results.map(item =>
+      validation.validate(importer, item)
+    )
+  )
+  reportErrors(importer, validated.errors, { marksItemInvalid: true })
+  await util.settle(
+    validated.results.map(item =>
+      firestore.save(
+        importer.firestore,
+        firestore.path['/languages/{lang}/groups/{id}']({ lang: item.language, id: item.id }),
+        firestore.convertFirstoreKeys(item.data, {})
+      )
+    )
+  )
+  const constructedItems = await util.settle(
+    constructed.results.flatMap(async group => {
+      const sessionItems = (await populateId(importer, 'session', group.data.sessionIds, group.language)) ?? []
+      const performerItems = (await populateId(importer, 'performer', group.data.performerIds, group.language)) ?? []
+      return [...sessionItems, ...performerItems].map((x, i) => ({
+        id: `${group.id}:${i}`,
+        groupId: group.id,
+        language: group.language,
+        data: {
+          ...x.data,
+          order: i,
+          detail: x.type === 'performer'
+            ? firestore.path['/languages/{lang}/performers/{id}']({ lang: x.language, id: x.id })
+            : firestore.path['/languages/{lang}/sessions/{id}']({ lang: x.language, id: x.id }),
+        },
+      }))
+    })
+  )
+  await util.settle(
+    constructedItems.results
+      .flatMap(x => x)
+      .map(item => {
+        return firestore.save(
+          importer.firestore,
+          firestore.path['/languages/{lang}/groups/{groupId}/items/{id}']({ lang: item.language, groupId: item.groupId, id: item.id }),
+          firestore.convertFirstoreKeys(item.data, { dates: ['timeFrom', 'timeTo'] as any[] /* session keys */ })
+        )
+      })
+  )
+  probe.groupsSaved(importer)
+}
+
 const uploadLoading = (importer: EventImporter, tasks: Array<() => Promise<any> | any>) => {
   return tasks.reduce(async (last, task, i) => {
     await last
@@ -488,6 +617,7 @@ export const upload = async (importer: EventImporter) => {
     () => saveVenues(importer),
     () => savePerformers(importer),
     () => saveSessions(importer),
+    () => saveGroups(importer),
     () => deleteUnreferenced(importer),
   ])
   probe.importFinished(importer)
@@ -567,16 +697,20 @@ export const createMemoryStore = () => {
 export type Venue = Item & { type: 'venue' }
 export type Session = Item & { type: 'session' }
 export type Performer = Item & { type: 'performer' }
+export type Group = Item & { type: 'group' }
 
 export type Item = { id: string; type: string; language: string; } & ({
   type: 'performer'
-  data: Partial<Omit<entity.Performer, 'venueIds' /* Venue IDs are derived during import from related sessions */>> & Pick<entity.Performer, 'id'>
+  data: Partial<Omit<entity.Performer, 'venueIds' /* Venue IDs are derived during import from related sessions */>> & Pick<entity.Performer, 'id'> & { groupId?: string /* Import will map this id to specified group */}
 } | {
   type: 'session'
-  data: Partial<Omit<entity.Session, 'venueName' | 'performerNames' /* Venue name, performer names are derived during import from related venue/performer */>> & Pick<entity.Session, 'id'>
+  data: Partial<Omit<entity.Session, 'venueName' | 'performerNames' /* Venue name, performer names are derived during import from related venue/performer */>> & Pick<entity.Session, 'id'> & { groupId?: string /* Import will map this id to specified group */}
 } | {
   type: 'venue'
   data: Partial<entity.Venue> & Pick<entity.Venue, 'id'>
+} | {
+  type: 'group'
+  data: Partial<Omit<entity.Group, 'type' /* Type is derived automatically from the ids during import */>> & Pick<entity.Group, 'id'>
 })
 export interface Settings {
   /** cs, en, ... */

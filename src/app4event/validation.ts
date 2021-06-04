@@ -25,6 +25,9 @@ const createCompiledSchemaForType = util.memoize((type: eventImport.Item['type']
     if (type === 'session') {
         return validator.compile(openapi.schema.components.schemas.Session)
     }
+    if (type === 'group') {
+        return validator.compile(openapi.schema.components.schemas.Group)
+    }
     return undefined
 })
 
