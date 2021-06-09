@@ -669,8 +669,8 @@ async function populateId<TItemType extends Item['type']>(importer: EventImporte
       const languageData = await importer.store.get(`${ent}:${id}:${lang}`)
       const defualtLanguageData = await await importer.store.get(`${ent}:${id}:${importer.settings.defaultLanguage}`)
       return util.defaults(
-        languageData,
-        defualtLanguageData
+        defualtLanguageData,
+        languageData
       ) as Item & { type: typeof ent }
     })
   )
