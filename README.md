@@ -1,5 +1,10 @@
 # app4event-backend
 
+## Usage
+
+- TODO Backend usage
+- TODO firestore rules copy
+
 ## Development notes
 
 ### OpenAPI
