@@ -4,7 +4,7 @@
 
 - TODO Backend usage
 - TODO firestore rules copy
-
+- todo make admin cli
 ## Development notes
 
 ### OpenAPI
