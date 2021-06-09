@@ -1,5 +1,6 @@
 import * as lodash from 'lodash'
 import * as events from 'events'
+import * as sanitizeHtml from 'sanitize-html'
 
 export { chunk, difference, uniq, memoize, countBy } from 'lodash'
 
@@ -93,3 +94,9 @@ export const createDomainProbe = <TEventToCreateData extends { [key: string]: (d
       ee: ee as any /* TODO This breaks the code usage.. Exported variable 'probe' has or is using name 'EventEmitter' from external module "events" but cannot be named.ts(4023) */,
   }
 }
+
+export const stripHtml = (value: string) => sanitizeHtml(value, {
+  allowedTags: ['br'],
+  allowedAttributes: {},
+})
+  .replace(/<br ?\/?>/g, '\n')
