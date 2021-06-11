@@ -8,7 +8,7 @@ import * as errors from './errors'
 
 export const probe = (() => {
   const addFirestoreLog = async (importer: EventImporter, message: string, severity: 'INFO' | 'ERROR') => {
-    await (!importer.settings.trackOnlyDataInFirestore && importer.importId && firestore.add(
+    await (!importer.trackOnlyDataInFirestore && importer.importId && firestore.add(
       importer.firestore,
       firestore.path['/imports/{id}/logs']({ id: importer.importId }),
       firestore.convertFirstoreKeys({
@@ -237,7 +237,7 @@ const saveImporterState = async (importer: EventImporter) => {
       'imports/info',
       state
     ),
-    !importer.settings.trackOnlyDataInFirestore && importer.importId && firestore.save(
+    !importer.trackOnlyDataInFirestore && importer.importId && firestore.save(
       importer.firestore,
       firestore.path['/imports/{id}']({ id: importer.importId }),
       firestore.convertFirstoreKeys(state, { dates: ['endAt', 'endTime', 'startAt', 'startTime'] })

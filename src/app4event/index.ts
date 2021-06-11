@@ -27,8 +27,8 @@ export const createBackend = (settings: {
     notificationProbe: pushNotifs.probe,
     onImportRequest: cors(
       async (_req: http.IncomingMessage, res: http.ServerResponse) => {
-        const i = await eventImport.createImporter(settings.event)
-        await eventImport.createImport(i)
+        const i = await eventImport.createImporter({ ...settings.event, trackOnlyDataInFirestore: true })
+        await eventImport.createImport({ ...i, trackOnlyDataInFirestore: false })
         res.end()
       }
     ),
