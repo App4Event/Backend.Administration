@@ -23,56 +23,16 @@ export const probe = (() => {
     importStarted: (importer: EventImporter) => {
       void addFirestoreLog(importer, 'Import started', 'INFO')
     },
-    // TODO refactor savingX savedX to automated based on item
-    savingVenues: (importer: EventImporter) => {
-      void importer.store.get('venue-ids')
+    savingItemsOfType: ({ importer, type }: { importer: EventImporter, type: Item['type'] }) => {
+      void importer.store.get(`${type}-ids`)
         .then(async (ids: string[]) => {
-          await addFirestoreLog(importer, `Saving ${ids?.length} venues`, 'INFO')
+          await addFirestoreLog(importer, `Saving ${ids?.length}x ${type}`, 'INFO')
         })
     },
-    venuesSaved: (importer: EventImporter) => {
-      const invalidCount = Object.keys(importer.invalidEntity.venue).length
+    savedItemsOfType: ({ importer, type }: { importer: EventImporter, type: Item['type'] }) => {
+      const invalidCount = Object.keys(importer.invalidEntity[type]).length
       if (invalidCount) {
-        void addFirestoreLog(importer, `${invalidCount} invalid venues`, 'ERROR')
-      }
-    },
-    savingLanguages: (importer: EventImporter) => {
-      void addFirestoreLog(importer, 'Saving languages', 'INFO')
-    },
-    savingPerformers: (importer: EventImporter) => {
-      void importer.store.get('performer-ids')
-      .then(async (ids: string[]) => {
-        await addFirestoreLog(importer, `Saving ${ids?.length} performers`, 'INFO')
-      })
-    },
-    performersSaved: (importer: EventImporter) => {
-      const invalidCount = Object.keys(importer.invalidEntity.performer).length
-      if (invalidCount) {
-        void addFirestoreLog(importer, `${invalidCount} invalid performers`, 'ERROR')
-      }
-    },
-    savingSessions: (importer: EventImporter) => {
-      void importer.store.get('session-ids')
-      .then(async (ids: string[]) => {
-        await addFirestoreLog(importer, `Saving ${ids?.length} sessions`, 'INFO')
-      })
-    },
-    sessionsSaved: (importer: EventImporter) => {
-      const invalidCount = Object.keys(importer.invalidEntity.session).length
-      if (invalidCount) {
-        void addFirestoreLog(importer, `${invalidCount} invalid sessions`, 'ERROR')
-      }
-    },
-    savingGroups: (importer: EventImporter) => {
-      void importer.store.get('group-ids')
-      .then(async (ids: string[]) => {
-        await addFirestoreLog(importer, `Saving ${ids?.length} groups`, 'INFO')
-      })
-    },
-    groupsSaved: (importer: EventImporter) => {
-      const invalidCount = Object.keys(importer.invalidEntity.group).length
-      if (invalidCount) {
-        void addFirestoreLog(importer, `${invalidCount} invalid groups`, 'ERROR')
+        void addFirestoreLog(importer, `${invalidCount}x invalid ${type}`, 'ERROR')
       }
     },
     deletingUnreferencedDocuments: (importer: EventImporter) => {
@@ -103,10 +63,11 @@ export const createImporter = async (settings: Settings) => {
     errors: [] as Error[],
     warnings: [] as Error[],
     invalidEntity: {
-      session: {} as Record<string, Item & { type: 'session' }>,
-      performer: {} as Record<string, Item & { type: 'performer' }>,
-      venue: {} as Record<string, Item & { type: 'venue' }>,
-      group: {} as Record<string, Item & { type: 'group' }>,
+      session: {} as Record<string, Session>,
+      performer: {} as Record<string, Performer>,
+      venue: {} as Record<string, Venue>,
+      group: {} as Record<string, Group>,
+      language: {} as Record<string, Language>,
     },
   }
   await saveImporterState(i)
@@ -131,10 +92,11 @@ export const createImporterFromState = async (settings: Settings, state: Partial
     errors: [] as Error[],
     warnings: [] as Error[],
     invalidEntity: {
-      session: {} as Record<string, Item & { type: 'session' }>,
-      performer: {} as Record<string, Item & { type: 'performer' }>,
-      venue: {} as Record<string, Item & { type: 'venue' }>,
-      group: {} as Record<string, Item & { type: 'group' }>,
+      session: {} as Record<string, Session>,
+      performer: {} as Record<string, Performer>,
+      venue: {} as Record<string, Venue>,
+      group: {} as Record<string, Group>,
+      language: {} as Record<string, Language>,
     },
   }
   probe.importStarted(i)
@@ -154,8 +116,8 @@ export const deleteUnreferenced = async (importer: EventImporter) => {
     const invalidIds = Object.keys(importer.invalidEntity[ent])
     return util.difference(downloadedIds, invalidIds)
   }
-  function getEntityCollection(ent: Item['type']) {
-    const choices: Record<Item['type'], any> = {
+  function getEntityCollection(ent: Exclude<Item['type'], 'language'>) {
+    const choices: Record<typeof ent, any> = {
       performer: firestore.path['/languages/{lang}/performers'],
       session: firestore.path['/languages/{lang}/sessions'],
       venue: firestore.path['/languages/{lang}/venues'],
@@ -166,7 +128,7 @@ export const deleteUnreferenced = async (importer: EventImporter) => {
   /**
    * @param path Those only with { lang } input
    */
-  async function pruneLanguagesCollection(ent: Item['type']) {
+  async function pruneLanguagesCollection(ent: Exclude<Item['type'], 'language'>) {
     await Promise.all(
       importer.settings.languages.map(async language => {
         const collectionName = getEntityCollection(ent)({ lang: language } as any)
@@ -347,24 +309,41 @@ export const addItems = async (importer: EventImporter, items: Item[]) => {
 }
 
 const saveLanguages = async (importer: EventImporter) => {
-  probe.savingLanguages(importer)
-  const records: entity.Language[] = importer.settings.languages
-    .map(languageCode => ({
-      isDefault: languageCode === importer.settings.defaultLanguage,
-      name: ((ISO6391 as any) as typeof ISO6391.default).getNativeName(languageCode) || languageCode,
+  const languages: Language[] = importer.settings.languages.map((languageCode) => {
+    return {
       id: languageCode,
-    }))
+      type: 'language',
+      language: languageCode,
+      data: {
+        isDefault: languageCode === importer.settings.defaultLanguage,
+        name:
+          ((ISO6391 as any) as typeof ISO6391.default).getNativeName(
+            languageCode
+          ) || languageCode,
+        id: languageCode,
+      },
+    }
+  })
+  await addItems(importer, languages)
+  probe.savingItemsOfType({ importer, type: 'language' })
+  const validated = await util.settle(
+    languages.map(item =>
+        validation.validate(importer, item)
+      )
+    )
+  reportErrors(importer, validated.errors, { marksItemInvalid: true })
   await Promise.allSettled(
-    records.map(data => firestore.save(
+    validated.results.map(x => firestore.save(
         importer.firestore,
-        firestore.path['/languages/{lang}/']({ lang: data.id }),
-        data
+        firestore.path['/languages/{lang}/']({ lang: x.id }),
+        x.data
       ))
   )
+  probe.savedItemsOfType({ importer, type: 'language' })
 }
 
 const saveVenues = async (importer: EventImporter) => {
-  probe.savingVenues(importer)
+  probe.savingItemsOfType({ importer, type: 'venue' })
   const ids: Array<Item['id']> = (await importer.store.get('venue-ids')) || []
   const constructed = await util.settle(
     ids.flatMap((id, i) => {
@@ -401,11 +380,11 @@ const saveVenues = async (importer: EventImporter) => {
       )
     )
   )
-  probe.venuesSaved(importer)
+  probe.savedItemsOfType({ importer, type: 'venue' })
 }
 
 const savePerformers = async (importer: EventImporter) => {
-  probe.savingPerformers(importer)
+  probe.savingItemsOfType({ importer, type: 'performer' })
   const ids: Array<Item['id']> = (await importer.store.get('performer-ids')) || []
   const constructed = await util.settle(
     ids.flatMap(id => {
@@ -452,11 +431,11 @@ const savePerformers = async (importer: EventImporter) => {
       )
     )
   )
-  probe.performersSaved(importer)
+  probe.savedItemsOfType({ importer, type: 'performer' })
 }
 
 const saveSessions = async (importer: EventImporter) => {
-  probe.savingSessions(importer)
+  probe.savingItemsOfType({ importer, type: 'session' })
   const ids: Array<Item['id']> = (await importer.store.get('session-ids')) || []
   const constructed = await util.settle(
     ids.flatMap(id => {
@@ -508,11 +487,11 @@ const saveSessions = async (importer: EventImporter) => {
       )
     )
   )
-  probe.sessionsSaved(importer)
+  probe.savedItemsOfType({ importer, type: 'session' })
 }
 
 const saveGroups = async (importer: EventImporter) => {
-  probe.savingGroups(importer)
+  probe.savingItemsOfType({ importer, type: 'group' })
   const ids: Array<Item['id']> = (await importer.store.get('group-ids')) || []
   const constructedAll = await util.settle(
     ids.flatMap(id => {
@@ -598,7 +577,7 @@ const saveGroups = async (importer: EventImporter) => {
         )
       })
   )
-  probe.groupsSaved(importer)
+  probe.savedItemsOfType({ importer, type: 'group' })
 }
 
 const uploadLoading = (importer: EventImporter, tasks: Array<() => Promise<any> | any>) => {
@@ -662,7 +641,6 @@ async function populateId<TItemType extends Item['type']>(importer: EventImporte
   const result = await util.settle(
     ids.map(async id => {
       if (importer.invalidEntity[ent][id]) {
-        // TODO Raise warning of referencing invalid entity
         importer.warnings.push(errors.createImportError(importer, errors.INVALID_ITEM_REFERENCE))
         return
       }
@@ -698,6 +676,7 @@ export type Venue = Item & { type: 'venue' }
 export type Session = Item & { type: 'session' }
 export type Performer = Item & { type: 'performer' }
 export type Group = Item & { type: 'group' }
+export type Language = Item & { type: 'language' }
 
 export type Item = { id: string; type: string; language: string; } & ({
   type: 'performer'
@@ -711,6 +690,9 @@ export type Item = { id: string; type: string; language: string; } & ({
 } | {
   type: 'group'
   data: Partial<Omit<entity.Group, 'type' /* Type is derived automatically from the ids during import */>> & Pick<entity.Group, 'id'>
+} | {
+  type: 'language'
+  data: Partial<entity.Language> & Pick<entity.Group, 'id'>
 })
 export interface Settings {
   /** cs, en, ... */

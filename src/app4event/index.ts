@@ -59,7 +59,6 @@ export const createBackend = (settings: {
         i.importId = result.importId
       }
       i = await eventImport.createImporterFromState(importerSettings, i)
-      // TODO use createImporterFromState to make sure it works fine
       await eventImport.startLoading(i, settings.import)
     },
   }

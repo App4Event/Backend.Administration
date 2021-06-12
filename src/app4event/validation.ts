@@ -28,6 +28,9 @@ const createCompiledSchemaForType = util.memoize((type: eventImport.Item['type']
     if (type === 'group') {
         return validator.compile(openapi.schema.components.schemas.Group)
     }
+    if (type === 'language') {
+        return validator.compile(openapi.schema.components.schemas.Language)
+    }
     return undefined
 })
 
