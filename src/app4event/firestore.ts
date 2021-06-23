@@ -87,9 +87,10 @@ export const convertFirstoreKeys = <TItem extends Record<string, any>, TKey exte
     }
   }, {})
   const datesOverride = settings.dates?.reduce((override, prop) => {
+    const date = util.createDate(item[prop])
     return {
       ...override,
-      [prop]: util.createDate(item[prop]) ?? null,
+      [prop]: date ? firebaseAdmin.firestore.Timestamp.fromDate(date) : null,
     }
   }, {})
   return {
