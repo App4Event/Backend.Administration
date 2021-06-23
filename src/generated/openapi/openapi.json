@@ -162,6 +162,12 @@
           "timeTo" : {
             "type" : "string"
           },
+          "images" : {
+            "items" : {
+              "$ref" : "#/components/schemas/Image"
+            },
+            "type" : "array"
+          },
           "hasParent" : {
             "type" : "boolean"
           },

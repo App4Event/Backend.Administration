@@ -67,6 +67,7 @@ export interface components {
       description?: string;
       timeFrom: string;
       timeTo: string;
+      images?: components["schemas"]["Image"][];
       hasParent: boolean;
       subsessionIds: string[];
       likes?: number;

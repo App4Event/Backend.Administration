@@ -132,7 +132,10 @@ components:
           type: string
         timeTo:
           type: string
-        # images:
+        images:
+          type: array
+          items:
+            $ref: "#/components/schemas/Image"
         # links
         # customFields
         # tags
