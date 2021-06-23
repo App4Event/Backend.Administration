@@ -445,6 +445,13 @@ const saveSessions = async (importer: EventImporter) => {
     const venueName = venue?.data.name
     const venueId = venue?.id
     const parent = parents[0]
+    const images = item.data.images?.length
+      ? item.data.images
+      : (performers ?? [])
+        .flatMap(x => x.data.images)
+        .filter(x => x)
+        .map(x => x!)
+        .slice(0, 1)
     return {
       ...item,
       language: meta.languageCode,
@@ -457,6 +464,7 @@ const saveSessions = async (importer: EventImporter) => {
         performerNames,
         venueId,
         venueName,
+        images,
       },
     }
   })
