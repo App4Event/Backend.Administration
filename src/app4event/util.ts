@@ -84,10 +84,10 @@ export const createDomainProbe = <TEventToCreateData extends { [key: string]: (d
         ...method,
         [event]: (data: EventData) => ee.emit(event as string, eventToCreateData[event](data)),
       // eslint-disable-next-line
-      }), {} as { [key in Event]: (...params: Parameters<EventData>) => ReturnType<typeof ee.emit> })
+      }), {} as { [key in Event]: (...params: Parameters<TEventToCreateData[key]>) => ReturnType<typeof ee.emit> })
   return {
       ...emitMethods,
-      on: (e: Event, cb: (data: any) => any) => {
+      on: <T extends Event>(e: T, cb: (data: ReturnType<TEventToCreateData[T]>) => any) => {
         // TODO Would be better to return the return variable, but see todo below
         ee.on(e as string, cb)
       },

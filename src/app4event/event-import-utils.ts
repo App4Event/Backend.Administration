@@ -199,27 +199,7 @@ export const validateItems = async <TItem extends Item>(importer: EventImporter,
   }
 
 export const probe = (() => {
-  const addFirestoreLog = async (
-    importer: EventImporter,
-    message: string,
-    severity: 'INFO' | 'ERROR'
-  ) => {
-    await (!importer.trackOnlyDataInFirestore &&
-      importer.importId &&
-      firestore.add(
-        importer.firestore,
-        firestore.path['/imports/{id}/logs']({ id: importer.importId }),
-        firestore.convertFirstoreKeys(
-          {
-            timestamp: new Date(),
-            severity,
-            message: message,
-          },
-          { dates: ['timestamp'] }
-        )
-      ))
-  }
-  return util.createDomainProbe({
+  const p = util.createDomainProbe({
     loadingDataFailed: (error: Error) => error,
     importStarted: (importer: EventImporter) => {
       void addFirestoreLog(importer, 'Import started', 'INFO')
@@ -261,7 +241,30 @@ export const probe = (() => {
     importFinished: (importer: EventImporter) => {
       void addFirestoreLog(importer, 'Import finished', 'INFO')
     },
+    log: (event: { message: string, severity: 'INFO' | 'ERROR' }) => event,
   })
+  return p
+  async function addFirestoreLog(
+    importer: EventImporter,
+    message: string,
+    severity: 'INFO' | 'ERROR'
+  ) {
+    p.log({ message, severity })
+    await (!importer.trackOnlyDataInFirestore &&
+      importer.importId &&
+      firestore.add(
+        importer.firestore,
+        firestore.path['/imports/{id}/logs']({ id: importer.importId }),
+        firestore.convertFirstoreKeys(
+          {
+            timestamp: new Date(),
+            severity,
+            message: message,
+          },
+          { dates: ['timestamp'] }
+        )
+      ))
+  }
 })()
 
 /**
