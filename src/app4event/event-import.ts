@@ -421,7 +421,7 @@ export type Item = { id: string; type: string; language: string; } & ({
   data: Partial<Omit<entity.Group, 'type' /* Type is derived automatically from the ids during import */>> & Pick<entity.Group, 'id'>
 } | {
   type: 'language'
-  data: Partial<entity.Language> & Pick<entity.Group, 'id'>
+  data: Partial<entity.Language> & Pick<entity.Language, 'id'>
 })
 export interface Settings {
   /** cs, en, ... */
@@ -434,6 +434,7 @@ export interface Settings {
   store?: {
     set: (key: string, val: any) => void
     get: (key: string) => Promise<any>
-  }
+  },
+  reuploadImage?: (image: entity.Image) => Promise<entity.Image | undefined>
 }
 export type EventImporter = util.Unpromise<ReturnType<typeof createImporter>>

@@ -6,6 +6,7 @@ export const NO_ITEM_DATA = 'no-item-data'
 export const LOADING_DATA_FAILED = 'loading-data-failed'
 export const INVALID_ITEM_REFERENCE = 'invalid-item-reference'
 export const DELETED_DATABASE_ITEM = 'deleted-database-item'
+export const IMAGE_REUPLOAD_FAILED = 'image-reupload-failed'
 
 export const createImportError = (
   i: eventImport.EventImporter,
@@ -15,7 +16,8 @@ export const createImportError = (
     | typeof NO_ITEM_DATA
     | typeof LOADING_DATA_FAILED
     | typeof INVALID_ITEM_REFERENCE
-    | typeof DELETED_DATABASE_ITEM,
+    | typeof DELETED_DATABASE_ITEM
+    | typeof IMAGE_REUPLOAD_FAILED,
   opts?: { error?: any; item?: eventImport.Item }
 ) => {
   return Object.assign(new Error(name), {

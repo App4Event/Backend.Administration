@@ -199,14 +199,28 @@
         "type" : "object"
       },
       "Image" : {
+        "oneOf" : [ {
+          "$ref" : "#/components/schemas/ResizinImage"
+        }, {
+          "$ref" : "#/components/schemas/UriImage"
+        } ]
+      },
+      "ResizinImage" : {
         "properties" : {
           "id" : {
             "type" : "string"
-          },
+          }
+        },
+        "required" : [ "id" ],
+        "type" : "object"
+      },
+      "UriImage" : {
+        "properties" : {
           "uri" : {
             "type" : "string"
           }
         },
+        "required" : [ "uri" ],
         "type" : "object"
       },
       "News" : {

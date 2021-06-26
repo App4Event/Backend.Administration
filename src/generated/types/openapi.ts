@@ -77,9 +77,14 @@ export interface components {
       name?: string;
       value?: string;
     };
-    Image: {
-      id?: string;
-      uri?: string;
+    Image:
+      | components["schemas"]["ResizinImage"]
+      | components["schemas"]["UriImage"];
+    ResizinImage: {
+      id: string;
+    };
+    UriImage: {
+      uri: string;
     };
     News: {
       id?: string;

@@ -1,5 +1,5 @@
 import * as entity from './entity'
-import { EventImporter, Item } from './event-import'
+import { EventImporter, Group, Item, Language, Performer, Session, upload, Venue } from './event-import'
 import * as firestore from './firestore'
 import * as util from './util'
 import * as errors from './errors'
@@ -153,6 +153,50 @@ export const addItems = async (importer: EventImporter, items: Item[]) => {
   }, Promise.resolve())
 }
 
+const typeToGetImages = {
+  performer: (x: Performer) => x.data?.images,
+  session: (x: Session) => x.data?.images,
+  group: (x: Group) => x.data?.images,
+  language: (_: Language) => [] as entity.Image[],
+  venue: (_: Venue) => [] as entity.Image[],
+}
+
+const typeToSetImages = {
+  performer: (x: Performer, images: entity.Image[]) => { x.data.images = images },
+  session: (x: Session, images: entity.Image[]) => { x.data.images = images },
+  group: (x: Group, images: entity.Image[]) => { x.data.images = images },
+  language: (_: Language) => [] as entity.Image[],
+  venue: (_: Venue) => [] as entity.Image[],
+}
+
+const reuploadImage = async <T extends Item>(importer: EventImporter, item: T, image: entity.Image) => {
+  // TODO Call importer.setings.upload for image
+  // catch for error map
+  try {
+    return await importer.settings.reuploadImage!(image)
+  } catch (error) {
+    throw errors.createImportError(importer, 'image-reupload-failed', { error, item })
+  }
+}
+
+const reuploadImages = async <TItem extends Item>(importer: EventImporter, item: TItem) => {
+  if (!importer.settings.reuploadImage) return
+  const getImages = typeToGetImages[item.type]
+  // TODO Why 'never'??
+  const images = getImages(item as any) ?? []
+  if (!images.length) return
+  const result = await util.settle(images.filter(x => x).map(async x => {
+    const reuploaded = await reuploadImage(importer, item, x)
+    return {
+      reuploaded,
+      original: x,
+    }
+  }))
+  reportErrors(importer, result.errors)
+  const reuploaded = result.results.map(x => x.reuploaded).filter(x => x).map(x => x!)
+  typeToSetImages[item.type](item as any, reuploaded)
+}
+
 export const constructItems = async <TType extends Item['type'], TConstructed>(importer: EventImporter, type: TType, construct: (item: Item & { type: TType }, meta: { index: number, languageCode: string, id: Item['id'] }) => TConstructed) => {
   const ids: Array<Item['id']> = (await importer.store.get(`${type}-ids`)) || []
   const constructed = await util.settle(
@@ -171,7 +215,15 @@ export const constructItems = async <TType extends Item['type'], TConstructed>(i
   )
   reportErrors(importer, constructed.errors, { marksItemInvalid: true })
   // TODO Better idea to let TConstructed be a (Promise<A> | A) but result in A here?
-  return constructed as Omit<typeof constructed, 'results'> & { results: Array<util.Unpromise<TConstructed>> }
+  // TConstructed here should be TItem
+  const constructedItems = constructed as Omit<typeof constructed, 'results'> & { results: Array<util.Unpromise<TConstructed>> }
+
+  await util.chunk((constructedItems.results.flatMap(x => x) as Item[]), 20)
+    .reduce(async (last, items) => {
+      await last
+      await Promise.all(items.map(item => reuploadImages(importer, item)))
+    }, Promise.resolve())
+  return constructedItems
 }
 
 export const validateItems = async <TItem extends Item>(importer: EventImporter, constructed: TItem[]) => {
