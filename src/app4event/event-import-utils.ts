@@ -266,7 +266,7 @@ export const probe = (() => {
       void importer.store.get(`${type}-ids`).then(async (ids: string[]) => {
         await addFirestoreLog(
           importer,
-          `Saving ${ids?.length}x ${type}`,
+          `Saving ${ids?.length ?? 0}x ${type}`,
           'INFO'
         )
       })
