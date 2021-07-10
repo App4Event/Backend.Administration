@@ -27,6 +27,7 @@ export const createImporter = async (settings: Settings) => {
     progress: updateProgress('start'),
     firestore: f,
     trackOnlyDataInFirestore: settings.trackOnlyDataInFirestore ?? false,
+    usePerformerNameAsSessionName: settings.usePerformerNameAsSessionName ?? false,
     /** Legacy for startTime/endTime */
     startAt: new Date(),
     endAt: undefined as Date | undefined,
@@ -57,6 +58,7 @@ export const createImporterFromState = async (settings: Settings, state: Partial
     progress: updateProgress('ready'),
     firestore: f,
     trackOnlyDataInFirestore: settings.trackOnlyDataInFirestore ?? false,
+    usePerformerNameAsSessionName: settings.usePerformerNameAsSessionName ?? false,
     startAt: state.startAt ?? new Date(),
     endAt: state.endAt ?? undefined as Date | undefined,
     errors: [] as Error[],
@@ -236,6 +238,10 @@ const saveSessions = async (importer: EventImporter) => {
     const venueName = venue?.data.name
     const venueId = venue?.id
     const parent = parents[0]
+    let name = item.data.name
+    if (importer.usePerformerNameAsSessionName) (
+      name = performerNames[0] || name
+    )
     const images = item.data.images?.length
       ? item.data.images
       : (performers ?? [])
@@ -256,6 +262,7 @@ const saveSessions = async (importer: EventImporter) => {
         venueId,
         venueName,
         images,
+        name,
       },
     }
   })
@@ -436,5 +443,11 @@ export interface Settings {
     get: (key: string) => Promise<any>
   },
   reuploadImage?: (image: entity.Image) => Promise<entity.Image | undefined>
+  /**
+   * If true, session.name will be overwritten with first performer name of the sesssion
+   * (defined in its performerIds)
+   * @default false
+   */
+  usePerformerNameAsSessionName?: boolean
 }
 export type EventImporter = util.Unpromise<ReturnType<typeof createImporter>>
