@@ -5,6 +5,9 @@
 - TODO Backend usage
 - TODO firestore rules copy
 - todo make admin cli
+
+
+- TODO description of entities is always stripped from html
 ## Development notes
 
 ### OpenAPI

@@ -204,6 +204,7 @@ const savePerformers = async (importer: EventImporter) => {
       data: {
         ...item.data,
         id: meta.id,
+        description: item.data.description ? util.stripHtml(item.data.description).trim() : item.data.description,
         sessionIds,
         venueIds,
         customFields,
@@ -239,9 +240,9 @@ const saveSessions = async (importer: EventImporter) => {
     const venueId = venue?.id
     const parent = parents[0]
     let name = item.data.name
-    if (importer.usePerformerNameAsSessionName) (
+    if (importer.usePerformerNameAsSessionName) {
       name = performerNames[0] || name
-    )
+    }
     const images = item.data.images?.length
       ? item.data.images
       : (performers ?? [])
@@ -256,6 +257,7 @@ const saveSessions = async (importer: EventImporter) => {
         ...item?.data,
         id: item.id,
         hasParent: !!parent,
+        description: item.data.description ? util.stripHtml(item.data.description).trim() : item.data.description,
         subsessionIds,
         performerIds,
         performerNames,
