@@ -168,6 +168,12 @@
             },
             "type" : "array"
           },
+          "links" : {
+            "items" : {
+              "$ref" : "#/components/schemas/Link"
+            },
+            "type" : "array"
+          },
           "hasParent" : {
             "type" : "boolean"
           },
