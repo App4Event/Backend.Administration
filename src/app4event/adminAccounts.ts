@@ -77,7 +77,7 @@ function echo(str: string) {
 type Client = util.Unpromise<ReturnType<typeof getAuthenticatedClient>>
 
 const upsertAdmin = async (client: Client, project: string, email: string, password: string) => {
-    const existingUser = (await readUsers()).find(x => x.email === email)
+    const existingUser = (await findAllUsers()).find(x => x.email === email)
     if (existingUser) {
         echo('Existing user found')
         await makeAdmin(existingUser.uid)
@@ -99,19 +99,20 @@ const upsertAdmin = async (client: Client, project: string, email: string, passw
             password,
         })
     }
-    async function readUsers() {
-        let users: Array<firebaseAdmin.auth.ListUsersResult['users'][0]> = []
-        let pageToken: string | undefined
-        do {
-            const res = await firebaseAdmin.auth().listUsers(100, pageToken)
-            pageToken = res.pageToken
-            users = users.concat(res.users)
-        } while (pageToken)
-        return users
-    }
 }
 
-export const makeAdmin = async (project: string, username: string, password: string) => {
+const findAllUsers = async () => {
+    let users: Array<firebaseAdmin.auth.ListUsersResult['users'][0]> = []
+    let pageToken: string | undefined
+    do {
+        const res = await firebaseAdmin.auth().listUsers(100, pageToken)
+        pageToken = res.pageToken
+        users = users.concat(res.users)
+    } while (pageToken)
+    return users
+}
+
+const authenticate = async (project: string) => {
     echo('Authenticating')
     const scopes = [
         'https://www.googleapis.com/auth/firebase',
@@ -119,6 +120,25 @@ export const makeAdmin = async (project: string, username: string, password: str
     ]
     echo('Opening browser to authenticate you')
     const client = await getAuthenticatedClient({ scopes }, project)
+    echo('Authentication OK')
+    return client
+}
+
+export const makeAdmin = async (project: string, username: string, password: string) => {
+    const client = await authenticate(project)
     echo(`Making admin of user email=${username}, password=${password} in project ${project}`)
     await upsertAdmin(client, project, username, password)
+}
+
+export const setPassword = async (project: string, username: string, password: string) => {
+    await authenticate(project)
+    const existingUser = (await findAllUsers()).find(x => x.email === username)
+    if (!existingUser) {
+        echo(`No user with email=${username} found. This is no op.`)
+        echo(`Run \`npm a4e-createAdmin ${project} ${username} ${password}\` to register the user`)
+        return
+    }
+    echo('Updating password')
+    await firebaseAdmin.auth().updateUser(existingUser.uid, { password })
+    echo('Password set')
 }

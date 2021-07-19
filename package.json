@@ -23,7 +23,8 @@
     "firestore.rules"
   ],
   "bin": {
-    "a4e-createAdmin": "./bin/create-admin.js"
+    "a4e-createAdmin": "./bin/create-admin.js",
+    "a4e-setPassword": "./bin/set-password.js"
   },
   "main": "lib/index.js",
   "dependencies": {

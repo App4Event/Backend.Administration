@@ -4,10 +4,24 @@
 
 - TODO Backend usage
 - TODO firestore rules copy
-- todo make admin cli
 
 
 - TODO description of entities is always stripped from html
+
+### `a4e-createAdmin`
+
+Run `a4e-createAdmin PROJECT USERNAME PASSWORD` to create account with this username and password in the given project.
+
+- If user with USERNAME does not exist, it is created
+- If user with USERNAME exists, their admin flag is set to TRUE but password is not changed (use `a4e-setPassword` to set the password of existing user)
+
+### `a4e-setPassword`
+
+Run `a4e-setPassword PROJECT USERNAME PASSWORD` to set user's password in the given project.
+
+- If user with USERNAME does not exist, nothing happens (user `a4e-createAdmin` to create non-existing admin account)
+- If user with USERNAME exists, their password is updated to PASSWORD
+
 ## Development notes
 
 ### OpenAPI
