@@ -256,6 +256,7 @@ const saveSessions = async (importer: EventImporter) => {
       data: {
         ...item?.data,
         id: item.id,
+        parentId: parent?.id,
         hasParent: !!parent,
         description: item.data.description ? util.stripHtml(item.data.description).trim() : item.data.description,
         subsessionIds,
