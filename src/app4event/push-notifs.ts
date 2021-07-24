@@ -20,7 +20,7 @@ export const onNewsCreated = async (id: string, languageCode: string, news: enti
             sound: 'default',
         },
     }
-    if (!languageCode || news.title) {
+    if (!languageCode || !news.title) {
         probe.noPushDueToEmptyData()
         return
     }
