@@ -1,23 +1,25 @@
-# app4event-backend
+# App4Event Backend.Administration
+
+Node.js SDK for your App4Event backend.
 
 ## Usage
 
-- TODO Backend usage
-- TODO firestore rules copy
+- TODO Backend usage, how to use the SDK
+- TODO firestore rules copy, how to setup firestore rules
+- TODO description of entities is always stripped from html, something that always happens during import
 
-
-- TODO description of entities is always stripped from html
+Once you install this SDK via npm, `a4e-*` commands described below are made available to you.
 
 ### `a4e-createAdmin`
 
-Run `a4e-createAdmin PROJECT USERNAME PASSWORD` to create account with this username and password in the given project.
+Run `a4e-createAdmin PROJECT USERNAME PASSWORD` to create account with this username and password in the given firebase project.
 
 - If user with USERNAME does not exist, it is created
 - If user with USERNAME exists, their admin flag is set to TRUE but password is not changed (use `a4e-setPassword` to set the password of existing user)
 
 ### `a4e-setPassword`
 
-Run `a4e-setPassword PROJECT USERNAME PASSWORD` to set user's password in the given project.
+Run `a4e-setPassword PROJECT USERNAME PASSWORD` to set user's password in the given firebase project.
 
 - If user with USERNAME does not exist, nothing happens (user `a4e-createAdmin` to create non-existing admin account)
 - If user with USERNAME exists, their password is updated to PASSWORD
