@@ -93,6 +93,11 @@ export interface components {
       body?: string;
       time?: string;
     };
+    Day: {
+      id?: string;
+      timeFrom?: string;
+      timeTo?: string;
+    };
     Location: {
       lat?: number;
       lng?: number;

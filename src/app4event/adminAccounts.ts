@@ -1,7 +1,7 @@
 import { OAuth2Client } from 'google-auth-library'
 import * as util from './util'
 import * as http from 'http'
-import * as open from 'open'
+import open from 'open'
 import * as url from 'url'
 import * as firebaseAdmin from 'firebase-admin'
 

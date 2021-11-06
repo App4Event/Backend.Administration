@@ -1,5 +1,5 @@
 import * as entity from './entity'
-import { EventImporter, Group, Item, Language, Performer, Session, upload, Venue } from './event-import'
+import { Day, EventImporter, Group, Item, Language, Performer, Session, upload, Venue } from './event-import'
 import * as firestore from './firestore'
 import * as util from './util'
 import * as errors from './errors'
@@ -114,6 +114,11 @@ export const addItem = async (importer: EventImporter, item: Item) => {
       })
     )
   }
+  // sessions' subsessions
+  if (item.type === 'session' && item.data.parentId) {
+    const key = `session2parent:${item.id}`
+    await addUniq(key, item.data.id)
+  }
   // group items
   if (item.type === 'group') {
     await Promise.all([
@@ -159,6 +164,7 @@ const typeToGetImages = {
   group: (x: Group) => x.data?.images,
   language: (_: Language) => [] as entity.Image[],
   venue: (_: Venue) => [] as entity.Image[],
+  day: (_: Day) => [] as entity.Image[],
 }
 
 const typeToSetImages = {
@@ -167,6 +173,7 @@ const typeToSetImages = {
   group: (x: Group, images: entity.Image[]) => { x.data.images = images },
   language: (_: Language) => [] as entity.Image[],
   venue: (_: Venue) => [] as entity.Image[],
+  day: (_: Day) => [] as entity.Image[],
 }
 
 const reuploadImage = async <T extends Item>(importer: EventImporter, item: T, image: entity.Image) => {

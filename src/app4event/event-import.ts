@@ -39,6 +39,7 @@ export const createImporter = async (settings: Settings) => {
       venue: {} as Record<string, Venue>,
       group: {} as Record<string, Group>,
       language: {} as Record<string, Language>,
+      day: {} as Record<string, Day>,
     },
   }
   await saveImporterState(i)
@@ -69,6 +70,7 @@ export const createImporterFromState = async (settings: Settings, state: Partial
       venue: {} as Record<string, Venue>,
       group: {} as Record<string, Group>,
       language: {} as Record<string, Language>,
+      day: {} as Record<string, Day>,
     },
   }
   probe.importStarted(i)
@@ -94,6 +96,7 @@ export const deleteUnreferenced = async (importer: EventImporter) => {
       session: firestore.path['/languages/{lang}/sessions'],
       venue: firestore.path['/languages/{lang}/venues'],
       group: firestore.path['/languages/{lang}/groups'],
+      day: firestore.path['/languages/{lang}/days'],
     }
     return choices[ent]
   }
@@ -416,23 +419,58 @@ export type Session = Item & { type: 'session' }
 export type Performer = Item & { type: 'performer' }
 export type Group = Item & { type: 'group' }
 export type Language = Item & { type: 'language' }
+export type Day = Item & { type: 'day' }
 
-export type Item = { id: string; type: string; language: string; } & ({
-  type: 'performer'
-  data: Partial<Omit<entity.Performer, 'venueIds' /* Venue IDs are derived during import from related sessions */>> & Pick<entity.Performer, 'id'> & { groupId?: string /* Import will map this id to specified group */}
-} | {
-  type: 'session'
-  data: Partial<Omit<entity.Session, 'venueName' | 'performerNames' /* Venue name, performer names are derived during import from related venue/performer */>> & Pick<entity.Session, 'id'> & { groupId?: string /* Import will map this id to specified group */}
-} | {
-  type: 'venue'
-  data: Partial<entity.Venue> & Pick<entity.Venue, 'id'>
-} | {
-  type: 'group'
-  data: Partial<Omit<entity.Group, 'type' /* Type is derived automatically from the ids during import */>> & Pick<entity.Group, 'id'>
-} | {
-  type: 'language'
-  data: Partial<entity.Language> & Pick<entity.Language, 'id'>
-})
+export type Item = { id: string; type: string; language: string } & (
+  | {
+      type: 'performer'
+      data: Partial<
+        Omit<
+          entity.Performer,
+          'venueIds' /* Venue IDs are derived during import from related sessions */
+        >
+      > &
+        Pick<entity.Performer, 'id'> & {
+          groupId?: string /* Import will map this id to specified group */
+        }
+    }
+  | {
+      type: 'session'
+      data: Partial<
+        Omit<
+          entity.Session,
+          | 'venueName'
+          | 'performerNames' /* Venue name, performer names are derived during import from related venue/performer */
+        >
+      > &
+        Pick<entity.Session, 'id'> & {
+          parentId?: string /* Allow to specify parent-child relation in reverse */
+          groupId?: string /* Import will map this id to specified group */
+        }
+    }
+    | {
+        type: 'venue'
+        data: Partial<entity.Venue> & Pick<entity.Venue, 'id'>
+      }
+    | {
+        type: 'day'
+        data: Partial<entity.Day> & Pick<entity.Day, 'id'>
+      }
+    | {
+      type: 'group'
+      data: Partial<
+        Omit<
+          entity.Group,
+          'type' /* Type is derived automatically from the ids during import */
+        >
+      > &
+        Pick<entity.Group, 'id'>
+    }
+  | {
+      type: 'language'
+      data: Partial<entity.Language> & Pick<entity.Language, 'id'>
+    }
+)
 export interface Settings {
   /** cs, en, ... */
   languages: string[]

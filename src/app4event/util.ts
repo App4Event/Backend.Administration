@@ -1,6 +1,6 @@
 import * as lodash from 'lodash'
 import * as events from 'events'
-import * as sanitizeHtml from 'sanitize-html'
+import sanitizeHtml from 'sanitize-html'
 
 export { chunk, difference, uniq, memoize, countBy } from 'lodash'
 

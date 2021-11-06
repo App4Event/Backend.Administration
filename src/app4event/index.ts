@@ -2,6 +2,7 @@ import * as http from 'http'
 import * as eventImport from './event-import'
 import * as firestore from './firestore'
 import * as pushNotifs from './push-notifs'
+export * as airtable from './airtable'
 export * from './entity'
 export {
   EventImporter,
@@ -10,6 +11,7 @@ export {
   Venue as ImportVenue,
   Session as ImportSession,
   Group as ImportGroup,
+  Day as ImportDay,
   sanitizeCustomFields,
 } from './event-import'
 export * as filmchief from './filmchief'

@@ -246,6 +246,20 @@
         },
         "type" : "object"
       },
+      "Day" : {
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "timeFrom" : {
+            "type" : "string"
+          },
+          "timeTo" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
+      },
       "Location" : {
         "properties" : {
           "lat" : {

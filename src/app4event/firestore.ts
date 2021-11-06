@@ -16,6 +16,7 @@ export const path = {
   '/languages/{lang}/performers': ({ lang }: { lang: string }) => '/languages/{lang}/performers'.replace('{lang}', lang),
   '/languages/{lang}/sessions': ({ lang }: { lang: string }) => '/languages/{lang}/sessions'.replace('{lang}', lang),
   '/languages/{lang}/venues': ({ lang }: { lang: string }) => '/languages/{lang}/venues'.replace('{lang}', lang),
+  '/languages/{lang}/days': ({ lang }: { lang: string }) => '/languages/{lang}/days'.replace('{lang}', lang),
   '/languages/{lang}/groups': ({ lang }: { lang: string }) => '/languages/{lang}/groups'.replace('{lang}', lang),
   '/languages/{lang}/performers/{id}': ({ lang, id }: { lang: string; id: string; }) => '/languages/{lang}/performers/{id}'
     .replace('{lang}', lang)

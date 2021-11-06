@@ -199,6 +199,15 @@ components:
         time:
           type: string
         # images
+    Day:
+      type: object
+      properties:
+        id:
+          type: string
+        timeFrom:
+          type: string
+        timeTo:
+          type: string
     Location:
       type: object
       properties:
