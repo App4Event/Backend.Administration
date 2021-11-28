@@ -21,10 +21,13 @@ export const path = {
   '/languages/{lang}/performers/{id}': ({ lang, id }: { lang: string; id: string; }) => '/languages/{lang}/performers/{id}'
     .replace('{lang}', lang)
     .replace('{id}', id),
-    '/languages/{lang}/venues/{id}': ({ lang, id }: { lang: string; id: string; }) => '/languages/{lang}/venues/{id}'
-      .replace('{lang}', lang)
-      .replace('{id}', id),
-    '/languages/{lang}/sessions/{id}': ({ lang, id }: { lang: string; id: string; }) => '/languages/{lang}/sessions/{id}'
+  '/languages/{lang}/venues/{id}': ({ lang, id }: { lang: string; id: string; }) => '/languages/{lang}/venues/{id}'
+    .replace('{lang}', lang)
+    .replace('{id}', id),
+  '/languages/{lang}/sessions/{id}': ({ lang, id }: { lang: string; id: string; }) => '/languages/{lang}/sessions/{id}'
+    .replace('{lang}', lang)
+    .replace('{id}', id),
+  '/languages/{lang}/days/{id}': ({ lang, id }: { lang: string; id: string; }) => '/languages/{lang}/days/{id}'
       .replace('{lang}', lang)
       .replace('{id}', id),
   '/languages/{lang}/groups/{id}': ({ lang, id }: { lang: string; id: string; }) => '/languages/{lang}/groups/{id}'
@@ -99,7 +102,8 @@ export const convertFirstoreKeys = <TItem extends Record<string, any>, TKey exte
     ...datesOverride,
     ...gpsOverride,
   }
-  function objectToGeo(object: { lat: any, lng: any }) {
+  function objectToGeo(object?: { lat: any, lng: any }) {
+    if (!object) return null
     if (isNaN(Number(object.lat)) || isNaN(Number(object.lng))) {
       return null
     }

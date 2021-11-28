@@ -33,6 +33,9 @@ const createCompiledSchemaForType = util.memoize((type: eventImport.Item['type']
     if (type === 'language') {
         return validator.compile(openapi.schema.components.schemas.Language)
     }
+    if (type === 'day') {
+        return validator.compile(openapi.schema.components.schemas.Day)
+    }
     return undefined
 })
 

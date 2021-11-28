@@ -293,6 +293,34 @@ export const probe = (() => {
           'ERROR'
         )
       }
+      if (type === 'session') {
+        const outOfBounds = importer.warnings.filter(x => x.message === errors.SESSION_OUT_OUF_BOUNDS)
+        if (outOfBounds.length) {
+          const example = (outOfBounds[0] as errors.ImportError).item as Session | undefined
+          const name = example?.data.name ? `name=${example.data.name}` : ''
+          const id = example?.data.id ? `id=${example.data.id}` : ''
+          const err = (outOfBounds[0] as errors.ImportError).error as errors.SessionOutOfBoundsError
+          const reason = err.reason === 'ends-before-event-starts'
+            ? `ends at ${err.sessionBound.toISOString()} but event starts on ${err.eventBound.toISOString()}`
+            : `starts at ${err.sessionBound.toISOString()} but event ends on ${err.eventBound.toISOString()}`
+          const message = [
+            id,
+            name,
+            reason,
+          ].filter(x => x).join(' ')
+          void addFirestoreLog(importer, `${outOfBounds.length} sessions will not be visible in the app, for example ${message}`, 'ERROR')
+        }
+      }
+    },
+    addedItemsUpdated: (param: {
+      importer: EventImporter
+      itemTypeToAddedCount: Record<Item['type'], number>
+    }) => {
+      const serializedCounts = Object.entries(param.itemTypeToAddedCount)
+        .filter(x => x[1] > 0)
+        .map(x => `${x[0]} ${x[1]}x`)
+        .join(', ')
+      void addFirestoreLog(param.importer, `Loading from remote (${serializedCounts})`, 'INFO')
     },
     deletingUnreferencedDocuments: (importer: EventImporter) => {
       void addFirestoreLog(importer, 'Deleting unreferenced documents', 'INFO')
@@ -423,4 +451,81 @@ export const createMemoryStore = () => {
       return store.get(key)
     },
   }
+}
+
+export const startDataLoadProgress = (importer: EventImporter) => {
+  let lastCounts = initCounts()
+  let destroyed = false
+  const readCurrentStatus = async () => {
+    const typeCounts = await Promise.all(
+      (Object.keys(lastCounts) as Array<keyof typeof lastCounts>).map(type =>
+        ((importer.store.get(`${type}-ids`) as any) as Promise<
+          string[] | undefined
+        >).then(x => {
+          return {
+            type,
+            count: (x ?? []).length,
+          }
+        })
+      )
+    )
+    const counts = initCounts()
+    typeCounts.forEach(x => (counts[x.type] = x.count))
+    if (!destroyed && JSON.stringify(counts) !== JSON.stringify(lastCounts)) {
+      probe.addedItemsUpdated({ importer, itemTypeToAddedCount: counts })
+    }
+    lastCounts = counts
+  }
+  const t = setInterval(
+    () => {
+      void readCurrentStatus()
+    },
+    1000
+  )
+  return function destroy() {
+    clearInterval(t)
+    destroyed = true
+  }
+
+  function initCounts(): Record<Item['type'], number> {
+    return {
+      day: 0,
+      group: 0,
+      language: 0,
+      performer: 0,
+      session: 0,
+      venue: 0,
+    }
+  }
+}
+
+export const reportSessionsOutOfBounds = async (importer: EventImporter, sessions: Session[]) => {
+  const days = (await populateId(importer, 'day', await importer.store.get('day-ids'), importer.settings.defaultLanguage)) ?? []
+  if (!days.length) return
+  const maxDate = new Date(8640000000000000)
+  const minDate = new Date(-8640000000000000)
+  const min = new Date(Math.min(
+    ...days
+      .map(x => util.createDate(x.data.timeFrom)?.getTime() ?? minDate.getTime())
+  ))
+  const max = new Date(Math.max(
+    ...days
+      .map(x => util.createDate(x.data.timeFrom)?.getTime() ?? maxDate.getTime())
+  ))
+  sessions.forEach(session => {
+    const from = util.createDate(session.data.timeFrom)
+    const to = util.createDate(session.data.timeTo)
+    if (!from || !to) return
+    if (from > max) {
+      importer.warnings.push(errors.createImportError(importer, errors.SESSION_OUT_OUF_BOUNDS, {
+        error: errors.createSessionOutOfBoundsError(session, 'starts-after-event-ends', max, from),
+        item: session,
+      }))
+    } else if (to < min) {
+      importer.warnings.push(errors.createImportError(importer, errors.SESSION_OUT_OUF_BOUNDS, {
+        error: errors.createSessionOutOfBoundsError(session, 'ends-before-event-starts', min, to),
+        item: session,
+      }))
+    }
+  })
 }

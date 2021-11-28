@@ -4,7 +4,7 @@ import * as firestore from './firestore'
 import * as ISO6391 from 'iso-639-1'
 import * as uuid from 'uuid'
 import * as errors from './errors'
-import { addItems, constructItems, createMemoryStore, populateId, probe, sanitizeCustomFields, sanitizeLinks, SavedState, saveImporterState, updateProgress, validateItems } from './event-import-utils'
+import { addItems, constructItems, createMemoryStore, populateId, probe, reportSessionsOutOfBounds, sanitizeCustomFields, sanitizeLinks, SavedState, saveImporterState, startDataLoadProgress, updateProgress, validateItems } from './event-import-utils'
 
 export {
   addItems,
@@ -144,7 +144,7 @@ const saveLanguages = async (importer: EventImporter) => {
       data: {
         isDefault: languageCode === importer.settings.defaultLanguage,
         name:
-          ((ISO6391 as any) as typeof ISO6391.default).getNativeName(
+          ISO6391.default.getNativeName(
             languageCode
           ) || languageCode,
         id: languageCode,
@@ -162,6 +162,31 @@ const saveLanguages = async (importer: EventImporter) => {
       ))
   )
   probe.savedItemsOfType({ importer, type: 'language' })
+}
+
+const saveDays = async (importer: EventImporter) => {
+  probe.savingItemsOfType({ importer, type: 'day' })
+  const constructed = await constructItems(importer, 'day', (item, meta) => {
+    return {
+      ...item,
+      language: meta.languageCode,
+      data: {
+        ...item?.data,
+        id: meta.id,
+      },
+    }
+  })
+  const validated = await validateItems(importer, constructed.results)
+  await util.settle(
+    validated.results.map(item =>
+      firestore.save(
+        importer.firestore,
+        firestore.path['/languages/{lang}/days/{id}']({ lang: item.language, id: item.id }),
+        firestore.convertFirstoreKeys(item.data, { dates: ['timeFrom', 'timeTo'] })
+      )
+    )
+  )
+  probe.savedItemsOfType({ importer, type: 'day' })
 }
 
 const saveVenues = async (importer: EventImporter) => {
@@ -273,6 +298,7 @@ const saveSessions = async (importer: EventImporter) => {
     }
   })
   const validated = await validateItems(importer, constructed.results)
+  await reportSessionsOutOfBounds(importer, validated.results)
   await util.settle(
     validated.results.map(item =>
       firestore.save(
@@ -382,6 +408,7 @@ export const upload = async (importer: EventImporter) => {
   importer.progress = updateProgress('savingToDatabase')
   await uploadLoading(importer, [
     () => saveLanguages(importer),
+    () => saveDays(importer),
     () => saveVenues(importer),
     () => savePerformers(importer),
     () => saveSessions(importer),
@@ -405,12 +432,16 @@ export const upload = async (importer: EventImporter) => {
  * @param startFn
  */
 export const startLoading = async (importer: EventImporter, load: (importer: EventImporter) => Promise<void>) => {
+  const clearDataLoadProgress = startDataLoadProgress(importer)
   try {
     await load(importer)
+    await new Promise(setImmediate)
   } catch (error) {
     importer.errors.push(errors.createImportError(importer, errors.LOADING_DATA_FAILED))
     probe.loadingDataFailed(error)
     await saveImporterState(importer)
+  } finally {
+    clearDataLoadProgress()
   }
 }
 

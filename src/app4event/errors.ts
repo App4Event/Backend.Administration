@@ -7,6 +7,7 @@ export const LOADING_DATA_FAILED = 'loading-data-failed'
 export const INVALID_ITEM_REFERENCE = 'invalid-item-reference'
 export const DELETED_DATABASE_ITEM = 'deleted-database-item'
 export const IMAGE_REUPLOAD_FAILED = 'image-reupload-failed'
+export const SESSION_OUT_OUF_BOUNDS = 'session-out-of-bounds'
 
 export const createImportError = (
   i: eventImport.EventImporter,
@@ -17,7 +18,8 @@ export const createImportError = (
     | typeof LOADING_DATA_FAILED
     | typeof INVALID_ITEM_REFERENCE
     | typeof DELETED_DATABASE_ITEM
-    | typeof IMAGE_REUPLOAD_FAILED,
+    | typeof IMAGE_REUPLOAD_FAILED
+    | typeof SESSION_OUT_OUF_BOUNDS,
   opts?: { error?: any; item?: eventImport.Item }
 ) => {
   return Object.assign(new Error(name), {
@@ -25,5 +27,21 @@ export const createImportError = (
     ...opts,
   })
 }
+
+export const createSessionOutOfBoundsError = (
+  item: eventImport.Item,
+  reason: 'starts-after-event-ends' | 'ends-before-event-starts',
+  eventBound: Date,
+  sessionBound: Date
+) => {
+  return Object.assign(new Error(SESSION_OUT_OUF_BOUNDS), {
+    item,
+    reason,
+    eventBound,
+    sessionBound,
+  })
+}
+
+export type SessionOutOfBoundsError = ReturnType<typeof createSessionOutOfBoundsError>
 
 export type ImportError = ReturnType<typeof createImportError>

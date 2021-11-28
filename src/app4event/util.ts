@@ -8,6 +8,27 @@ export type Unpromise<T> = T extends Promise<infer U> ? U : T
 
 export type ValueOf<T> = T[keyof T]
 
+export const createDereferencerFrom = <
+  TGetCollection extends (...args: any[]) => Promise<any[]>,
+  TIteratee extends (item: TItem) => string | number,
+  TItem = ReturnType<TGetCollection> extends Promise<Array<infer TItem>> ? TItem : never
+>
+(getCollection: TGetCollection, getReferenceKey: TIteratee) => {
+  let idToItem: Record<keyof any, any> = {}
+
+  async function warmup(...args: Parameters<TGetCollection>) {
+    idToItem = lodash.keyBy(await getCollection(...args), getReferenceKey) as any
+  }
+  function dereference(references: any[] | undefined | null) {
+    if (!references) return []
+    return references.map(x => (idToItem as any)[x]).filter(x => x)
+  }
+  return {
+    dereference,
+    warmup,
+  }
+}
+
 export const defaults = (a: any, b: any) => {
   if ([undefined, null].includes(b)) return a
   if (['string', 'boolean', 'number'].includes(typeof b)) return b
@@ -100,3 +121,8 @@ export const stripHtml = (value: string) => sanitizeHtml(value, {
   allowedAttributes: {},
 })
   .replace(/<br ?\/?>/g, '\n')
+
+export const createNumber = (x: any) => {
+  if (isNaN(Number(x))) return
+  return Number(x)
+}
