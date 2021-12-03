@@ -9,7 +9,7 @@ export const connectFirestore = () => {
   }
 }
 
-type FirestoreConnection = ReturnType<typeof connectFirestore>
+export type FirestoreConnection = ReturnType<typeof connectFirestore>
 
 export const path = {
   '/languages/{lang}/': ({ lang }: { lang: string }) => '/languages/{lang}/'.replace('{lang}', lang),
@@ -40,6 +40,9 @@ export const path = {
   '/imports': () => 'imports',
   '/imports/{id}': ({ id }: { id: string }) => '/imports/{id}'.replace('{id}', id),
   '/imports/{id}/logs': ({ id }: { id: string }) => '/imports/{id}/logs'.replace('{id}', id),
+  '/languages/{lang}/newsDelayed': ({ lang }: { lang: string }) => `/languages/${lang}/newsDelayed`,
+  '/languages/{lang}/news': ({ lang }: { lang: string }) => `/languages/${lang}/news`,
+  '/languages/{lang}/news/{id}': ({ lang, id }: { lang: string, id: string }) => `/languages/${lang}/news/${id}`,
 }
 
 export const save = async (conn: FirestoreConnection, path: string, doc: any) => {

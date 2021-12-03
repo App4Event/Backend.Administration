@@ -199,6 +199,13 @@ components:
         time:
           type: string
         # images
+    DelayedNews:
+      allOf:
+        - $ref: "#/components/schemas/News"
+        - type: object
+          properties:
+            publishError:
+              type: string
     Day:
       type: object
       properties:

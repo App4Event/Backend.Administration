@@ -48,6 +48,9 @@ export const createBackend = (settings: {
     onNewsCreated: async (newsId: string, langCode: string, newsData: any) => {
       await pushNotifs.onNewsCreated(newsId, langCode, newsData)
     },
+    publishDelayedNews: async () => {
+      await pushNotifs.publishDelayedNews(settings.event.languages)
+    },
     runImport: async (
       subsettings?: Pick<eventImport.Settings, 'trackOnlyDataInFirestore'>
     ) => {

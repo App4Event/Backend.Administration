@@ -93,6 +93,9 @@ export interface components {
       body?: string;
       time?: string;
     };
+    DelayedNews: components["schemas"]["News"] & {
+      publishError?: string;
+    };
     Day: {
       id?: string;
       timeFrom?: string;

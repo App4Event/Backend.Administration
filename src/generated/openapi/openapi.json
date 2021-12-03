@@ -246,6 +246,13 @@
         },
         "type" : "object"
       },
+      "DelayedNews" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/News"
+        }, {
+          "$ref" : "#/components/schemas/DelayedNews_allOf"
+        } ]
+      },
       "Day" : {
         "properties" : {
           "id" : {
@@ -313,6 +320,14 @@
       },
       "Tag" : {
         "type" : "string"
+      },
+      "DelayedNews_allOf" : {
+        "properties" : {
+          "publishError" : {
+            "type" : "string"
+          }
+        },
+        "type" : "object"
       }
     }
   }
