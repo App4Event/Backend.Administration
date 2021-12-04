@@ -30,15 +30,15 @@ export const createImportError = (
 
 export const createSessionOutOfBoundsError = (
   item: eventImport.Item,
-  reason: 'starts-after-event-ends' | 'ends-before-event-starts',
-  eventBound: Date,
-  sessionBound: Date
+  reason: 'session-out-of-day',
+  dayBounds: readonly [Date, Date] | undefined,
+  sessionBounds: [Date, Date]
 ) => {
   return Object.assign(new Error(SESSION_OUT_OUF_BOUNDS), {
     item,
     reason,
-    eventBound,
-    sessionBound,
+    dayBounds,
+    sessionBounds,
   })
 }
 

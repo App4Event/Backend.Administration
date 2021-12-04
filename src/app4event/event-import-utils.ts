@@ -300,13 +300,13 @@ export const probe = (() => {
           const name = example?.data.name ? `name=${example.data.name}` : ''
           const id = example?.data.id ? `id=${example.data.id}` : ''
           const err = (outOfBounds[0] as errors.ImportError).error as errors.SessionOutOfBoundsError
-          const reason = err.reason === 'ends-before-event-starts'
-            ? `ends at ${err.sessionBound.toISOString()} but event starts on ${err.eventBound.toISOString()}`
-            : `starts at ${err.sessionBound.toISOString()} but event ends on ${err.eventBound.toISOString()}`
           const message = [
             id,
             name,
-            reason,
+            `takes place ${err.sessionBounds[0].toLocaleString()}-${err.sessionBounds[1].toLocaleString()}`,
+            err.dayBounds
+              ? `but day starts on ${err.dayBounds[0].toLocaleString()} and ends ${err.dayBounds[1].toLocaleString()}`
+              : 'but there is no such day in event',
           ].filter(x => x).join(' ')
           void addFirestoreLog(importer, `${outOfBounds.length} sessions will not be visible in the app, for example ${message}`, 'ERROR')
         }
@@ -502,28 +502,35 @@ export const startDataLoadProgress = (importer: EventImporter) => {
 export const reportSessionsOutOfBounds = async (importer: EventImporter, sessions: Session[]) => {
   const days = (await populateId(importer, 'day', await importer.store.get('day-ids'), importer.settings.defaultLanguage)) ?? []
   if (!days.length) return
-  const maxDate = new Date(8640000000000000)
-  const minDate = new Date(-8640000000000000)
-  const min = new Date(Math.min(
-    ...days
-      .map(x => util.createDate(x.data.timeFrom)?.getTime() ?? minDate.getTime())
-  ))
-  const max = new Date(Math.max(
-    ...days
-      .map(x => util.createDate(x.data.timeFrom)?.getTime() ?? maxDate.getTime())
-  ))
+  const dayRanges = days.map(x => [util.createDate(x.data.timeFrom)!, util.createDate(x.data.timeTo)!] as const)
+    .filter(x => x[0] && x[1])
+  const datestamp = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
   sessions.forEach(session => {
     const from = util.createDate(session.data.timeFrom)
     const to = util.createDate(session.data.timeTo)
     if (!from || !to) return
-    if (from > max) {
+
+    const hasDay = dayRanges.find(x => (from >= x[0] && from <= x[1]) || (to >= x[0] && to <= x[1]))
+    if (hasDay) return
+
+    const startDayStamp = datestamp(from)
+    const endDayStamp = datestamp(to)
+
+    const startDay = dayRanges.find(x => datestamp(x[0]) === startDayStamp || datestamp(x[1]) === startDayStamp)
+    const endDay = dayRanges.find(x => datestamp(x[0]) === endDayStamp || datestamp(x[1]) === endDayStamp)
+    if (startDay) {
       importer.warnings.push(errors.createImportError(importer, errors.SESSION_OUT_OUF_BOUNDS, {
-        error: errors.createSessionOutOfBoundsError(session, 'starts-after-event-ends', max, from),
+        error: errors.createSessionOutOfBoundsError(session, 'session-out-of-day', startDay, [from, to]),
         item: session,
       }))
-    } else if (to < min) {
+    } else if (endDay) {
       importer.warnings.push(errors.createImportError(importer, errors.SESSION_OUT_OUF_BOUNDS, {
-        error: errors.createSessionOutOfBoundsError(session, 'ends-before-event-starts', min, to),
+        error: errors.createSessionOutOfBoundsError(session, 'session-out-of-day', endDay, [from, to]),
+        item: session,
+      }))
+    } else {
+      importer.warnings.push(errors.createImportError(importer, errors.SESSION_OUT_OUF_BOUNDS, {
+        error: errors.createSessionOutOfBoundsError(session, 'session-out-of-day', undefined, [from, to]),
         item: session,
       }))
     }
