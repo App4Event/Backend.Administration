@@ -41,6 +41,7 @@ components:
             - CSFD
             - IMDB
             - INSTAGRAM
+            - SPOTIFY
         uri:
           type: string
       required:
@@ -103,6 +104,10 @@ components:
         # customFields
         location:
           $ref: '#/components/schemas/Location'
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
       required:
         - id
         - name

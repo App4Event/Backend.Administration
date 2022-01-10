@@ -34,7 +34,8 @@ export interface components {
         | "LINKEDIN"
         | "CSFD"
         | "IMDB"
-        | "INSTAGRAM";
+        | "INSTAGRAM"
+        | "SPOTIFY";
       uri?: string;
     };
     Performer: {
@@ -56,6 +57,7 @@ export interface components {
       description?: string;
       color?: string;
       location?: components["schemas"]["Location"];
+      images?: components["schemas"]["Image"][];
     };
     Session: {
       id: string;

@@ -39,7 +39,7 @@
       "Link" : {
         "properties" : {
           "type" : {
-            "enum" : [ "unknown", "HTTP", "FACEBOOK", "TWITTER", "YOUTUBE", "VIMEO", "SOUNDCLOUD", "LINKEDIN", "CSFD", "IMDB", "INSTAGRAM" ],
+            "enum" : [ "unknown", "HTTP", "FACEBOOK", "TWITTER", "YOUTUBE", "VIMEO", "SOUNDCLOUD", "LINKEDIN", "CSFD", "IMDB", "INSTAGRAM", "SPOTIFY" ],
             "type" : "string"
           },
           "uri" : {
@@ -122,6 +122,12 @@
           },
           "location" : {
             "$ref" : "#/components/schemas/Location"
+          },
+          "images" : {
+            "items" : {
+              "$ref" : "#/components/schemas/Image"
+            },
+            "type" : "array"
           }
         },
         "required" : [ "id", "name", "order" ],
