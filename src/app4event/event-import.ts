@@ -435,7 +435,6 @@ export const startLoading = async (importer: EventImporter, load: (importer: Eve
   const clearDataLoadProgress = startDataLoadProgress(importer)
   try {
     await load(importer)
-    await new Promise(setImmediate)
   } catch (error) {
     importer.errors.push(errors.createImportError(importer, errors.LOADING_DATA_FAILED))
     probe.loadingDataFailed(error)

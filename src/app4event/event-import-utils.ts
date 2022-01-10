@@ -471,7 +471,6 @@ export const createMemoryStore = () => {
 
 export const startDataLoadProgress = (importer: EventImporter) => {
   let lastCounts = initCounts()
-  let destroyed = false
   const readCurrentStatus = async () => {
     const typeCounts = await Promise.all(
       (Object.keys(lastCounts) as Array<keyof typeof lastCounts>).map(type =>
@@ -487,20 +486,23 @@ export const startDataLoadProgress = (importer: EventImporter) => {
     )
     const counts = initCounts()
     typeCounts.forEach(x => (counts[x.type] = x.count))
-    if (!destroyed && JSON.stringify(counts) !== JSON.stringify(lastCounts)) {
+    if (JSON.stringify(counts) !== JSON.stringify(lastCounts)) {
       probe.addedItemsUpdated({ importer, itemTypeToAddedCount: counts })
     }
     lastCounts = counts
   }
   const t = setInterval(
     () => {
+      if (importer.progress >= 0.3) { // Saving to database
+        clearInterval(t)
+        return
+      }
       void readCurrentStatus()
     },
     1000
   )
   return function destroy() {
     clearInterval(t)
-    destroyed = true
   }
 
   function initCounts(): Record<Item['type'], number> {
