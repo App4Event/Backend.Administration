@@ -287,9 +287,25 @@ export const probe = (() => {
     }) => {
       const invalidCount = Object.keys(importer.invalidEntity[type]).length
       if (invalidCount) {
+        const validationError = importer.errors.find((x): x is errors.ImportError => {
+          return (
+            (x.message === errors.INVALID_ITEM_DATA ||
+              x.message === errors.NO_VALIDATION_SCHEMA) &&
+            (x as errors.ImportError).item?.type === type
+          )
+        })
+        const exampleItem = validationError?.item
+        const exampleName = String((exampleItem?.data as any)?.name ?? '')
+        const reason = validationError?.error?.[0]?.message ?? validationError?.error?.message
+        const example = [
+          'for example',
+          `id=${exampleItem?.id ?? ''}`,
+          exampleName ? `name=${exampleName}` : '',
+          reason,
+        ].filter(x => x).join(' ')
         void addFirestoreLog(
           importer,
-          `${invalidCount}x invalid ${type}`,
+          [`${invalidCount}x invalid ${type}`, `${example}`].join(', '),
           'ERROR'
         )
       }

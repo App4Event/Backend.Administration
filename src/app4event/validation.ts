@@ -43,7 +43,7 @@ export const validate = async <TItem extends eventImport.Item>(importer: eventIm
     await 1
     const validate = createCompiledSchemaForType(item.type)
     if (!validate) {
-        throw errors.createImportError(importer, errors.NO_VALIDATION_SCHEMA)
+        throw errors.createImportError(importer, errors.NO_VALIDATION_SCHEMA, { item })
     }
     validate(item.data)
     if (!validate.errors) return item
