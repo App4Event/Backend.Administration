@@ -198,7 +198,7 @@ const saveVenues = async (importer: EventImporter) => {
       data: {
         ...item?.data,
         id: meta.id,
-        order: meta.index,
+        order: item.data.order ?? meta.index,
       },
     }
   })
