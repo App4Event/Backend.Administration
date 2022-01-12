@@ -84,6 +84,7 @@ export const deleteUnreferenced = async (importer: EventImporter) => {
   await pruneLanguagesCollection('session')
   await pruneLanguagesCollection('venue')
   await pruneLanguagesCollection('group')
+  await pruneLanguagesCollection('day')
 
   async function getKeepIds(ent: Item['type']) {
     const downloadedIds: string[] = await importer.store.get(`${ent}-ids`) ?? []
