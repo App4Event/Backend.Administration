@@ -7,6 +7,7 @@ Node.js SDK for your App4Event backend.
 - TODO Backend usage, how to use the SDK
 - TODO firestore rules copy, how to setup firestore rules
 - TODO description of entities is always stripped from html, something that always happens during import
+- TODO If HTTP function for import returns 403, grant it permissions to be invoked with unauthenticated users https://cloud.google.com/functions/docs/securing/managing-access-iam#gcloud_4
 
 Once you install this SDK via npm, `a4e-*` commands described below are made available to you.
 
