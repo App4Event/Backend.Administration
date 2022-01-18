@@ -269,8 +269,11 @@ const saveSessions = async (importer: EventImporter) => {
     const venueId = venue?.id
     const parent = parents[0]
     let name = item.data.name
+    // TODO Deprecate and introduce some `prefer`
     if (importer.usePerformerNameAsSessionName) {
       name = performerNames[0] || name
+    } else {
+      name = (name ?? '') || performerNames[0]
     }
     const images = item.data.images?.length
       ? item.data.images
