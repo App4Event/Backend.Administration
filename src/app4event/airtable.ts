@@ -74,6 +74,7 @@ export const FieldType = {
   Unknown: (x: unknown) => x,
   Attachments: (x: any): Image[] => x ?? [],
   Number: (x: any) => util.createNumber(x),
+  Boolean: (x: any) => Boolean(x),
 }
 
 export const createTableImporter = <
