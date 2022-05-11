@@ -161,7 +161,7 @@ const typeToGetImages = {
   session: (x: Session) => x.data?.images,
   group: (x: Group) => x.data?.images,
   language: (_: Language) => [] as entity.Image[],
-  venue: (_: Venue) => [] as entity.Image[],
+  venue: (x: Venue) => x.data.images,
   day: (_: Day) => [] as entity.Image[],
 }
 
@@ -170,7 +170,7 @@ const typeToSetImages = {
   session: (x: Session, images: entity.Image[]) => { x.data.images = images },
   group: (x: Group, images: entity.Image[]) => { x.data.images = images },
   language: (_: Language) => [] as entity.Image[],
-  venue: (_: Venue) => [] as entity.Image[],
+  venue: (x: Venue, images: entity.Image[]) => { x.data.images = images },
   day: (_: Day) => [] as entity.Image[],
 }
 
