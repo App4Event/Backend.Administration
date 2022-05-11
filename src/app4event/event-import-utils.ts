@@ -121,16 +121,14 @@ export const addItem = async (importer: EventImporter, item: Item) => {
   }
   // group items
   if (item.type === 'group') {
-    await Promise.all([
-      ...(item.data.performerIds ?? []).map(async id => {
-        const key = `group2performers:${id}`
-        await addUniq(key, item.data.id)
-      }),
-      ...(item.data.sessionIds ?? []).map(async id => {
-        const key = `group2sessions:${id}`
-        await addUniq(key, item.data.id)
-      }),
-    ])
+    for (const id of item.data.performerIds ?? []) {
+      const key = `group2performers:${item.id}`
+        await addUniq(key, id)
+    }
+    for (const id of item.data.sessionIds ?? []) {
+      const key = `group2sessions:${item.id}`
+        await addUniq(key, id)
+    }
   }
   if (item.type === 'performer' && item.data.groupId) {
     const key = `group2performers:${item.data.groupId}`
