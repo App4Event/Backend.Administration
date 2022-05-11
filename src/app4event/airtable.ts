@@ -72,7 +72,7 @@ export const FieldType = {
   References: (x: any) => x ? (x as string[]) : [],
   Any: (x: any) => x,
   Unknown: (x: unknown) => x,
-  Attachments: (x: any): Image[] => x ?? [],
+  Attachments: (x: any): Image[] => (x ?? []).reverse(),
   Number: (x: any) => util.createNumber(x),
   Boolean: (x: any) => Boolean(x),
 }
