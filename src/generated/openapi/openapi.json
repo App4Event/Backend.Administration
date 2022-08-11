@@ -180,6 +180,18 @@
             },
             "type" : "array"
           },
+          "customFields" : {
+            "items" : {
+              "$ref" : "#/components/schemas/CustomField"
+            },
+            "type" : "array"
+          },
+          "tags" : {
+            "items" : {
+              "$ref" : "#/components/schemas/Tag"
+            },
+            "type" : "array"
+          },
           "hasParent" : {
             "type" : "boolean"
           },

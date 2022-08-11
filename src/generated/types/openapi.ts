@@ -71,6 +71,8 @@ export interface components {
       timeTo: string;
       images?: components["schemas"]["Image"][];
       links?: components["schemas"]["Link"][];
+      customFields?: components["schemas"]["CustomField"][];
+      tags?: components["schemas"]["Tag"][];
       hasParent: boolean;
       subsessionIds: string[];
       likes?: number;

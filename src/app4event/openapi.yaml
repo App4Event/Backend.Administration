@@ -145,8 +145,14 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Link'
-        # customFields
-        # tags
+        customFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomField'
+        tags:
+          type: array
+          items:
+            $ref: '#/components/schemas/Tag'
         hasParent:
           type: boolean
         subsessionIds:
