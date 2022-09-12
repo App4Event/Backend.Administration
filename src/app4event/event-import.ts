@@ -41,6 +41,7 @@ export const createImporter = async (settings: Settings) => {
       language: {} as Record<string, Language>,
       day: {} as Record<string, Day>,
     },
+    errorReportExamples: settings.errorReportExamples ?? 1,
   }
   await saveImporterState(i)
   i.progress = updateProgress('ready')
@@ -72,6 +73,7 @@ export const createImporterFromState = async (settings: Settings, state: Partial
       language: {} as Record<string, Language>,
       day: {} as Record<string, Day>,
     },
+    errorReportExamples: settings.errorReportExamples ?? 1,
   }
   probe.importStarted(i)
   await saveImporterState(i)
@@ -530,5 +532,10 @@ export interface Settings {
    * @default false
    */
   usePerformerNameAsSessionName?: boolean
+  /**
+   * Number of import examples to print for each entity during import.
+   * Default: 1
+   */
+  errorReportExamples?: number
 }
 export type EventImporter = util.Unpromise<ReturnType<typeof createImporter>>

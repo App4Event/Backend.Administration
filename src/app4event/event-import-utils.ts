@@ -283,47 +283,16 @@ export const probe = (() => {
       importer: EventImporter
       type: Item['type']
     }) => {
-      const invalidCount = Object.keys(importer.invalidEntity[type]).length
-      if (invalidCount) {
-        const validationError = importer.errors.find((x): x is errors.ImportError => {
-          return (
-            (x.message === errors.INVALID_ITEM_DATA ||
-              x.message === errors.NO_VALIDATION_SCHEMA) &&
-            (x as errors.ImportError).item?.type === type
-          )
-        })
-        const exampleItem = validationError?.item
-        const exampleName = String((exampleItem?.data as any)?.name ?? '')
-        const reason = validationError?.error?.[0]?.message ?? validationError?.error?.message
-        const example = [
-          'for example',
-          `id=${exampleItem?.id ?? ''}`,
-          exampleName ? `name=${exampleName}` : '',
-          reason,
-        ].filter(x => x).join(' ')
+      const examples = getErrorExamples(importer, { entityType: type, samples: importer.errorReportExamples })
+      if (examples.invalidCount) {
         void addFirestoreLog(
           importer,
-          [`${invalidCount}x invalid ${type}`, `${example}`].join(', '),
+          `${examples.invalidCount}x invalid ${type}, for example: ${examples.invalidMessage}`,
           'ERROR'
         )
       }
-      if (type === 'session') {
-        const outOfBounds = importer.warnings.filter(x => x.message === errors.SESSION_OUT_OUF_BOUNDS)
-        if (outOfBounds.length) {
-          const example = (outOfBounds[0] as errors.ImportError).item as Session | undefined
-          const name = example?.data.name ? `name=${example.data.name}` : ''
-          const id = example?.data.id ? `id=${example.data.id}` : ''
-          const err = (outOfBounds[0] as errors.ImportError).error as errors.SessionOutOfBoundsError
-          const message = [
-            id,
-            name,
-            `takes place ${err.sessionBounds[0].toLocaleString()}-${err.sessionBounds[1].toLocaleString()}`,
-            err.dayBounds
-              ? `but day starts on ${err.dayBounds[0].toLocaleString()} and ends ${err.dayBounds[1].toLocaleString()}`
-              : 'but there is no such day in event',
-          ].filter(x => x).join(' ')
-          void addFirestoreLog(importer, `${outOfBounds.length} sessions will not be visible in the app, for example ${message}`, 'ERROR')
-        }
+      if (examples.sessionOutOfBoundsCount) {
+        void addFirestoreLog(importer, `${examples.sessionOutOfBoundsCount} sessions will not be visible in the app, for example ${examples.sessionOutOfBoundsMessage}`, 'ERROR')
       }
     },
     addedItemsUpdated: (param: {
@@ -342,13 +311,13 @@ export const probe = (() => {
     importFinished: (importer: EventImporter) => {
       void addFirestoreLog(importer, 'Import finished', 'INFO')
     },
-    log: (event: { message: string, severity: 'INFO' | 'ERROR' }) => event,
+    log: (event: { message: string, severity: 'INFO' | 'ERROR' | 'WARNING' }) => event,
   })
   return p
   async function addFirestoreLog(
     importer: EventImporter,
     message: string,
-    severity: 'INFO' | 'ERROR'
+    severity: 'INFO' | 'ERROR' | 'WARNING'
   ) {
     p.log({ message, severity })
     await (!importer.trackOnlyDataInFirestore &&
@@ -367,6 +336,64 @@ export const probe = (() => {
       ))
   }
 })()
+
+function getErrorExamples(importer: EventImporter, param: { samples: number, entityType: Item['type'] }) {
+  const invalidCount = Object.keys(importer.invalidEntity[param.entityType]).length
+  let invalidMessage = ''
+  if (invalidCount) {
+    const criticalErrors = importer.errors.filter((x): x is errors.ImportError => {
+      return (
+        (x.message === errors.INVALID_ITEM_DATA ||
+          x.message === errors.NO_VALIDATION_SCHEMA) &&
+        (x as errors.ImportError).item?.type === param.entityType
+      )
+    })
+      .slice(0, param.samples)
+      .map(x => serializeError(x))
+    invalidMessage = criticalErrors.join(', ')
+  }
+
+  let sessionOutOfBoundsCount = 0
+  let sessionOutOfBoundsMessage = ''
+  if (param.entityType === 'session') {
+    const outOfBounds = importer.warnings.filter(x => x.message === errors.SESSION_OUT_OUF_BOUNDS).slice(0, param.samples) as errors.ImportError[]
+    sessionOutOfBoundsCount = outOfBounds.length
+
+    if (outOfBounds.length) {
+      sessionOutOfBoundsMessage = outOfBounds.map(x => serializeSessionOutOfBoundsError(x)).join(', ')
+    }
+  }
+  return {
+    invalidCount,
+    invalidMessage,
+    sessionOutOfBoundsCount,
+    sessionOutOfBoundsMessage,
+  }
+  function serializeSessionOutOfBoundsError(importError: errors.ImportError) {
+    const example = importError.item as Session | undefined
+    const name = example?.data.name ? `name=${example.data.name}` : ''
+    const id = example?.data.id ? `id=${example.data.id}` : ''
+    const err = importError.error as errors.SessionOutOfBoundsError
+    return [
+      id,
+      name,
+      `takes place ${err.sessionBounds[0].toLocaleString()}-${err.sessionBounds[1].toLocaleString()}`,
+      err.dayBounds
+        ? `but day starts on ${err.dayBounds[0].toLocaleString()} and ends ${err.dayBounds[1].toLocaleString()}`
+        : 'but there is no such day in event',
+    ].filter(x => x).join(' ')
+  }
+  function serializeError(err: errors.ImportError) {
+    const exampleItem = err?.item
+    const exampleName = String((exampleItem?.data as any)?.name ?? '')
+    const reason = err?.error?.[0]?.message ?? err?.error?.message
+    return [
+      `id=${exampleItem?.id ?? ''}`,
+      exampleName ? `name=${exampleName}` : '',
+      reason,
+    ].filter(x => x).join(' ')
+  }
+}
 
 /**
  * Return array of custom fields from given input suitable for import.
