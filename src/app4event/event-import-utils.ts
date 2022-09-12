@@ -397,7 +397,7 @@ export const sanitizeLinks = (
   return items
     .map(x => ({
       type: x.type ? String(x.type) : ('' as any),
-      uri: x.uri ? String(x.uri) : '',
+      uri: x.uri ? String(x.uri).trim() : '',
     }))
     .filter(x => x.type && x.uri)
 }
