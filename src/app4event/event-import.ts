@@ -265,6 +265,7 @@ const saveSessions = async (importer: EventImporter) => {
     const parents = await populateId(importer, 'session', parentIds, meta.languageCode)
     const performerNames = util.pluck(performers, x => x.data.name)
     const performerIds = util.pluck(performers, x => x.data.id)
+    const customFields = sanitizeCustomFields(item.data.customFields)
     const venueName = venue?.data.name
     const venueId = venue?.id
     const parent = parents[0]
@@ -294,6 +295,7 @@ const saveSessions = async (importer: EventImporter) => {
         subsessionIds,
         performerIds,
         performerNames,
+        customFields,
         venueId,
         venueName,
         images,
