@@ -100,8 +100,14 @@ components:
           type: string
         color:
           type: string
-        # links
-        # customFields
+        links:
+          type: array
+          items:
+            $ref: '#/components/schemas/Link'
+        customFields:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomField'
         location:
           $ref: '#/components/schemas/Location'
         images:

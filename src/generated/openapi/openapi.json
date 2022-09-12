@@ -120,6 +120,18 @@
           "color" : {
             "type" : "string"
           },
+          "links" : {
+            "items" : {
+              "$ref" : "#/components/schemas/Link"
+            },
+            "type" : "array"
+          },
+          "customFields" : {
+            "items" : {
+              "$ref" : "#/components/schemas/CustomField"
+            },
+            "type" : "array"
+          },
           "location" : {
             "$ref" : "#/components/schemas/Location"
           },

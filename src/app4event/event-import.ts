@@ -193,6 +193,8 @@ const saveDays = async (importer: EventImporter) => {
 const saveVenues = async (importer: EventImporter) => {
   probe.savingItemsOfType({ importer, type: 'venue' })
   const constructed = await constructItems(importer, 'venue', (item, meta) => {
+    const customFields = sanitizeCustomFields(item.data.customFields)
+    const links = sanitizeLinks(item.data.links)
     return {
       ...item,
       language: meta.languageCode,
@@ -200,6 +202,8 @@ const saveVenues = async (importer: EventImporter) => {
         ...item?.data,
         id: meta.id,
         order: item.data.order ?? meta.index,
+        customFields,
+        links,
       },
     }
   })
