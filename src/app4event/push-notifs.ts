@@ -6,27 +6,39 @@ import * as firestore from './firestore'
 export const probe = util.createDomainProbe({
     newsCreated: (e: { id: string, languageCode: string, data: any }) => e,
     noPushDueToEmptyData: () => undefined,
-    notificationSent: (e: { languageCode: string, request: firebaseAdmin.messaging.MessagingPayload }) => e,
+    notificationSent: (e: { languageCode: string, request: firebaseAdmin.messaging.Message }) => e,
     delayedNewsPublished: (e: { titles: string[] }) => e,
 })
 
 export const onNewsCreated = async (id: string, languageCode: string, news: entity.News) => {
     probe.newsCreated({ id, languageCode, data: news })
-    const request: firebaseAdmin.messaging.MessagingPayload = {
+    const request: firebaseAdmin.messaging.Message = {
         data: {
             newsId: id,
+        },
+        android: {
+          notification: {
+            defaultSound: true,
+          },
         },
         notification: {
             title: news?.title ?? '',
             body: news?.body ?? '',
-            sound: 'default',
         },
+        apns: {
+          payload: {
+            aps: {
+              sound: 'default',
+            },
+          },
+        },
+        topic: languageCode,
     }
     if (!languageCode || !news.title) {
         probe.noPushDueToEmptyData()
         return
     }
-    await firebaseAdmin.messaging().sendToTopic(languageCode, request)
+    await firebaseAdmin.messaging().send(request)
     probe.notificationSent({ languageCode, request })
 }
 
