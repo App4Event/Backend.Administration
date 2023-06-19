@@ -15,7 +15,7 @@
     "cs:prettier:fix": "npm run cs:prettier:check -- --write '**/*.{ts,js,json,md}'"
   },
   "engines": {
-    "node": "16"
+    "node": "18"
   },
   "files": [
     "lib/**",
