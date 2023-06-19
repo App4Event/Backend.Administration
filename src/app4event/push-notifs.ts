@@ -3,6 +3,8 @@ import * as entity from '../app4event/entity'
 import * as util from './util'
 import * as firestore from './firestore'
 
+firebaseAdmin.apps.length === 0 && firebaseAdmin.initializeApp()
+
 export const probe = util.createDomainProbe({
     newsCreated: (e: { id: string, languageCode: string, data: any }) => e,
     noPushDueToEmptyData: () => undefined,
