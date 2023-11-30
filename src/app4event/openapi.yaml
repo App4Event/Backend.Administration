@@ -42,6 +42,8 @@ components:
             - IMDB
             - INSTAGRAM
             - SPOTIFY
+            - APPLEMUSIC
+            - TIKTOK
         uri:
           type: string
       required:

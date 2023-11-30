@@ -39,7 +39,7 @@
       "Link" : {
         "properties" : {
           "type" : {
-            "enum" : [ "unknown", "HTTP", "FACEBOOK", "TWITTER", "YOUTUBE", "VIMEO", "SOUNDCLOUD", "LINKEDIN", "CSFD", "IMDB", "INSTAGRAM", "SPOTIFY" ],
+            "enum" : [ "unknown", "HTTP", "FACEBOOK", "TWITTER", "YOUTUBE", "VIMEO", "SOUNDCLOUD", "LINKEDIN", "CSFD", "IMDB", "INSTAGRAM", "SPOTIFY", "APPLEMUSIC", "TIKTOK" ],
             "type" : "string"
           },
           "uri" : {

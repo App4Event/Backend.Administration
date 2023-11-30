@@ -35,7 +35,9 @@ export interface components {
         | "CSFD"
         | "IMDB"
         | "INSTAGRAM"
-        | "SPOTIFY";
+        | "SPOTIFY"
+        | "APPLEMUSIC"
+        | "TIKTOK";
       uri?: string;
     };
     Performer: {
