@@ -4,7 +4,7 @@ import * as firestore from './firestore'
 import * as ISO6391 from 'iso-639-1'
 import * as uuid from 'uuid'
 import * as errors from './errors'
-import { addItems, constructItems, createMemoryStore, populateId, probe, reportSessionsOutOfBounds, sanitizeCustomFields, sanitizeLinks, SavedState, saveImporterState, startDataLoadProgress, updateProgress, validateItems } from './event-import-utils'
+import { addItems, constructItems, createMemoryStore, ensureError, populateId, probe, reportSessionsOutOfBounds, sanitizeCustomFields, sanitizeLinks, SavedState, saveImporterState, startDataLoadProgress, updateProgress, validateItems } from './event-import-utils'
 
 export {
   addItems,
@@ -449,7 +449,7 @@ export const startLoading = async (importer: EventImporter, load: (importer: Eve
     await load(importer)
   } catch (error) {
     importer.errors.push(errors.createImportError(importer, errors.LOADING_DATA_FAILED))
-    probe.loadingDataFailed(error)
+    probe.loadingDataFailed(ensureError(error))
     await saveImporterState(importer)
   } finally {
     clearDataLoadProgress()

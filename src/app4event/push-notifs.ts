@@ -114,8 +114,12 @@ const publishDelayedNewsList = async (f: firestore.FirestoreConnection, items: L
             batch.delete(f.firestore.doc(item.firestorePath))
             state.published += 1
         } catch (error) {
-            publishError = error.message
-            state.failures.push({ error, id: item.id })
+            publishError =
+              error instanceof Error ? error.message : String(error)
+            state.failures.push({
+              error: error instanceof Error ? error : new Error(String(error)),
+              id: item.id,
+            })
             state.failed += 1
             batch.update(f.firestore.doc(item.id), { ...item, publishError })
         }
