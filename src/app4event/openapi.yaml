@@ -116,6 +116,10 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Image'
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/VenueCategory'
       required:
         - id
         - name
@@ -274,3 +278,16 @@ components:
         - type
     Tag:
       type: string
+    VenueCategory:
+      type: object
+      properties:
+        name:
+          type: string
+        color:
+          type: string
+        iconUnicode:
+          type: string
+      required:
+        - name
+        - color
+        - iconUnicode

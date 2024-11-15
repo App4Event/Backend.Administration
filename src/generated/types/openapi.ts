@@ -62,6 +62,7 @@ export interface components {
       customFields?: components["schemas"]["CustomField"][];
       location?: components["schemas"]["Location"];
       images?: components["schemas"]["Image"][];
+      categories?: components["schemas"]["VenueCategory"][];
     };
     Session: {
       id: string;
@@ -124,6 +125,11 @@ export interface components {
       images?: components["schemas"]["Image"][];
     };
     Tag: string;
+    VenueCategory: {
+      name: string;
+      color: string;
+      iconUnicode: string;
+    };
   };
 }
 

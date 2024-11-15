@@ -140,6 +140,12 @@
               "$ref" : "#/components/schemas/Image"
             },
             "type" : "array"
+          },
+          "categories" : {
+            "items" : {
+              "$ref" : "#/components/schemas/VenueCategory"
+            },
+            "type" : "array"
           }
         },
         "required" : [ "id", "name", "order" ],
@@ -350,6 +356,21 @@
       },
       "Tag" : {
         "type" : "string"
+      },
+      "VenueCategory" : {
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "color" : {
+            "type" : "string"
+          },
+          "iconUnicode" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "color", "iconUnicode", "name" ],
+        "type" : "object"
       },
       "DelayedNews_allOf" : {
         "properties" : {

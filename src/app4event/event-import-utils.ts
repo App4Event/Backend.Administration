@@ -301,6 +301,9 @@ export const probe = (() => {
       if (examples.sessionOutOfBoundsCount) {
         void addFirestoreLog(importer, `${examples.sessionOutOfBoundsCount} sessions will not be visible in the app, for example ${examples.sessionOutOfBoundsMessage}`, 'ERROR')
       }
+      if (examples.venueMissingCategoriesCount) {
+        void addFirestoreLog(importer, `${examples.venueMissingCategoriesCount} venues will not be visible as pin on map, for example ${examples.venueMissingCategoriesMessage}`, 'WARNING')
+      }
     },
     addedItemsUpdated: (param: {
       importer: EventImporter
@@ -370,11 +373,22 @@ function getErrorExamples(importer: EventImporter, param: { samples: number, ent
       sessionOutOfBoundsMessage = outOfBounds.map(x => serializeSessionOutOfBoundsError(x)).join(', ')
     }
   }
+  let venueMissingCategoriesCount = 0
+  let venueMissingCategoriesMessage = ''
+  if (param.entityType === 'venue') {
+    const missingCategories = importer.warnings.filter(x => x.message === errors.MISSING_VENUE_CATEGORIES) as errors.ImportError[]
+    venueMissingCategoriesCount += missingCategories.length
+    if (missingCategories.length) {
+      venueMissingCategoriesMessage = missingCategories.slice(0, param.samples).map(x => serializeError(x)).join(', ')
+    }
+  }
   return {
     invalidCount,
     invalidMessage,
     sessionOutOfBoundsCount,
     sessionOutOfBoundsMessage,
+    venueMissingCategoriesCount,
+    venueMissingCategoriesMessage
   }
   function serializeSessionOutOfBoundsError(importError: errors.ImportError) {
     const example = importError.item as Session | undefined

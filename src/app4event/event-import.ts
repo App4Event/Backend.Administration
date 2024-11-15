@@ -197,6 +197,10 @@ const saveVenues = async (importer: EventImporter) => {
   const constructed = await constructItems(importer, 'venue', (item, meta) => {
     const customFields = sanitizeCustomFields(item.data.customFields)
     const links = sanitizeLinks(item.data.links)
+    if (!item.data.categories?.length) {
+      item.data.categories = []
+      importer.warnings.push(errors.createImportError(importer, errors.MISSING_VENUE_CATEGORIES, { item }))
+    }
     return {
       ...item,
       language: meta.languageCode,
@@ -490,15 +494,18 @@ export type Item = { id: string; type: string; language: string } & (
           groupId?: string /* Import will map this id to specified group */
         }
     }
-    | {
-        type: 'venue'
-        data: Partial<entity.Venue> & Pick<entity.Venue, 'id'>
-      }
-    | {
-        type: 'day'
-        data: Partial<entity.Day> & Pick<entity.Day, 'id'>
-      }
-    | {
+  | {
+      type: 'venue'
+      data: Partial<entity.Venue> &
+        Pick<entity.Venue, 'id'> & {
+          categories?: entity.VenueCategory[]
+        }
+    }
+  | {
+      type: 'day'
+      data: Partial<entity.Day> & Pick<entity.Day, 'id'>
+    }
+  | {
       type: 'group'
       data: Partial<
         Omit<

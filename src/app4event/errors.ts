@@ -8,6 +8,7 @@ export const INVALID_ITEM_REFERENCE = 'invalid-item-reference'
 export const DELETED_DATABASE_ITEM = 'deleted-database-item'
 export const IMAGE_REUPLOAD_FAILED = 'image-reupload-failed'
 export const SESSION_OUT_OUF_BOUNDS = 'session-out-of-bounds'
+export const MISSING_VENUE_CATEGORIES = 'missing-venue-categories'
 
 export const createImportError = (
   i: eventImport.EventImporter,
@@ -19,7 +20,8 @@ export const createImportError = (
     | typeof INVALID_ITEM_REFERENCE
     | typeof DELETED_DATABASE_ITEM
     | typeof IMAGE_REUPLOAD_FAILED
-    | typeof SESSION_OUT_OUF_BOUNDS,
+    | typeof SESSION_OUT_OUF_BOUNDS
+    | typeof MISSING_VENUE_CATEGORIES,
   opts?: { error?: any; item?: eventImport.Item }
 ) => {
   return Object.assign(new Error(name), {
