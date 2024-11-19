@@ -16,6 +16,7 @@ validator.addSchema(openapi.schema.components.schemas.Location, '#/components/sc
 validator.addSchema(openapi.schema.components.schemas.Tag, '#/components/schemas/Tag')
 validator.addSchema(openapi.schema.components.schemas.UriImage, '#/components/schemas/UriImage')
 validator.addSchema(openapi.schema.components.schemas.ResizinImage, '#/components/schemas/ResizinImage')
+validator.addSchema(openapi.schema.components.schemas.VenueCategory, '#/components/schemas/VenueCategory')
 
 const createCompiledSchemaForType = util.memoize((type: eventImport.Item['type']) => {
     if (type === 'performer') {

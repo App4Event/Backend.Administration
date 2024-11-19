@@ -198,7 +198,7 @@ const saveVenues = async (importer: EventImporter) => {
     const customFields = sanitizeCustomFields(item.data.customFields)
     const links = sanitizeLinks(item.data.links)
     if (!item.data.categories?.length) {
-      item.data.categories = []
+      item.data.categories = undefined
       importer.warnings.push(errors.createImportError(importer, errors.MISSING_VENUE_CATEGORIES, { item }))
     }
     return {

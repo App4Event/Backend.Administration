@@ -120,6 +120,9 @@
           "color" : {
             "type" : "string"
           },
+          "iconUnicode" : {
+            "type" : "string"
+          },
           "links" : {
             "items" : {
               "$ref" : "#/components/schemas/Link"

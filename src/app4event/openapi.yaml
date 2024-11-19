@@ -102,6 +102,8 @@ components:
           type: string
         color:
           type: string
+        iconUnicode:
+          type: string
         links:
           type: array
           items:
