@@ -146,7 +146,7 @@
           },
           "categories" : {
             "items" : {
-              "$ref" : "#/components/schemas/VenueCategory"
+              "$ref" : "#/components/schemas/VenueVenueCategory"
             },
             "type" : "array"
           }
@@ -360,8 +360,12 @@
       "Tag" : {
         "type" : "string"
       },
-      "VenueCategory" : {
+      "VenueVenueCategory" : {
+        "description" : "VenueCategory reference in Venue",
         "properties" : {
+          "id" : {
+            "type" : "string"
+          },
           "name" : {
             "type" : "string"
           },
@@ -370,10 +374,42 @@
           },
           "iconUnicode" : {
             "type" : "string"
+          },
+          "layout" : {
+            "$ref" : "#/components/schemas/VenueCategoryLayout"
           }
         },
-        "required" : [ "color", "iconUnicode", "name" ],
+        "required" : [ "color", "iconUnicode", "id", "layout", "name" ],
         "type" : "object"
+      },
+      "VenueCategory" : {
+        "description" : "Standalone VenueCategory",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "color" : {
+            "type" : "string"
+          },
+          "iconUnicode" : {
+            "type" : "string"
+          },
+          "order" : {
+            "type" : "number"
+          },
+          "layout" : {
+            "$ref" : "#/components/schemas/VenueCategoryLayout"
+          }
+        },
+        "required" : [ "color", "iconUnicode", "id", "layout", "name", "order" ],
+        "type" : "object"
+      },
+      "VenueCategoryLayout" : {
+        "enum" : [ "COMPACT", "LARGE" ],
+        "type" : "string"
       },
       "DelayedNews_allOf" : {
         "properties" : {
