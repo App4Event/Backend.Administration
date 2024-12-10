@@ -17,6 +17,8 @@ validator.addSchema(openapi.schema.components.schemas.Tag, '#/components/schemas
 validator.addSchema(openapi.schema.components.schemas.UriImage, '#/components/schemas/UriImage')
 validator.addSchema(openapi.schema.components.schemas.ResizinImage, '#/components/schemas/ResizinImage')
 validator.addSchema(openapi.schema.components.schemas.VenueCategory, '#/components/schemas/VenueCategory')
+validator.addSchema(openapi.schema.components.schemas.VenueVenueCategory, '#/components/schemas/VenueVenueCategory')
+validator.addSchema(openapi.schema.components.schemas.VenueCategoryLayout, '#/components/schemas/VenueCategoryLayout')
 
 const createCompiledSchemaForType = util.memoize((type: eventImport.Item['type']) => {
     if (type === 'performer') {
@@ -36,6 +38,9 @@ const createCompiledSchemaForType = util.memoize((type: eventImport.Item['type']
     }
     if (type === 'day') {
         return validator.compile(openapi.schema.components.schemas.Day)
+    }
+    if (type === 'venueCategory') {
+        return validator.compile(openapi.schema.components.schemas.VenueCategory)
     }
     return undefined
 })

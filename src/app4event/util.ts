@@ -21,7 +21,7 @@ export const createDereferencerFrom = <
   }
   function dereference(references: any[] | undefined | null) {
     if (!references) return []
-    return references.map(x => (idToItem as any)[x]).filter(x => x)
+    return references.map(x => (idToItem as any)[x]).filter(x => x) as TItem[]
   }
   return {
     dereference,
