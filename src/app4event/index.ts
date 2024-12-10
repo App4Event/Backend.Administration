@@ -12,6 +12,7 @@ export {
   Session as ImportSession,
   Group as ImportGroup,
   Day as ImportDay,
+  VenueCategory as ImportVenueCategory,
   sanitizeCustomFields,
 } from './event-import'
 export * as filmchief from './filmchief'

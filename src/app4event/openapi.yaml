@@ -121,7 +121,7 @@ components:
         categories:
           type: array
           items:
-            $ref: '#/components/schemas/VenueCategory'
+            $ref: '#/components/schemas/VenueVenueCategory'
       required:
         - id
         - name
@@ -280,9 +280,12 @@ components:
         - type
     Tag:
       type: string
-    VenueCategory:
+    VenueVenueCategory:
       type: object
+      description: VenueCategory reference in Venue
       properties:
+        id:
+          type: string
         name:
           type: string
         color:
@@ -290,6 +293,27 @@ components:
         iconUnicode:
           type: string
       required:
+        - id
         - name
         - color
         - iconUnicode
+    VenueCategory:
+      type: object
+      description: Standalone VenueCategory
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        color:
+          type: string
+        iconUnicode:
+          type: string
+        order:
+          type: number
+      required:
+        - id
+        - name
+        - color
+        - iconUnicode
+        - order

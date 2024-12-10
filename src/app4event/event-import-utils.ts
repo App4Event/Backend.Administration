@@ -1,5 +1,5 @@
 import * as entity from './entity'
-import { Day, EventImporter, Group, Item, Language, Performer, Session, upload, Venue } from './event-import'
+import { Day, EventImporter, Group, Item, Language, Performer, Session, upload, Venue, VenueCategory } from './event-import'
 import * as firestore from './firestore'
 import * as util from './util'
 import * as errors from './errors'
@@ -163,6 +163,7 @@ const typeToGetImages = {
   language: (_: Language) => [] as entity.Image[],
   venue: (x: Venue) => x.data.images,
   day: (_: Day) => [] as entity.Image[],
+  venueCategory: (_: VenueCategory) => [] as entity.Image[],
 }
 
 const typeToSetImages = {
@@ -172,6 +173,7 @@ const typeToSetImages = {
   language: (_: Language) => [] as entity.Image[],
   venue: (x: Venue, images: entity.Image[]) => { x.data.images = images },
   day: (_: Day) => [] as entity.Image[],
+  venueCategory: (_: VenueCategory) => [] as entity.Image[],
 }
 
 const reuploadImage = async <T extends Item>(importer: EventImporter, item: T, image: entity.Image) => {
@@ -187,7 +189,7 @@ const reuploadImage = async <T extends Item>(importer: EventImporter, item: T, i
 const reuploadImages = async <TItem extends Item>(importer: EventImporter, item: TItem) => {
   if (!importer.settings.reuploadImage) return
   const getImages = typeToGetImages[item.type]
-  // TODO Why 'never'??
+  // @ts-ignore TS2590: Expression produces a union type that is too complex to represent.
   const images = getImages(item as any) ?? []
   if (!images.length) return
   const result = await util.settle(images.filter(x => x).map(async x => {
@@ -199,7 +201,9 @@ const reuploadImages = async <TItem extends Item>(importer: EventImporter, item:
   }))
   reportErrors(importer, result.errors)
   const reuploaded = result.results.map(x => x.reuploaded).filter(x => x).map(x => x!)
-  typeToSetImages[item.type](item as any, reuploaded)
+  const setImages = typeToSetImages[item.type]
+  // @ts-ignore TS2590: Expression produces a union type that is too complex to represent.
+  setImages(item as any, reuploaded) as any
 }
 
 export const constructItems = async <TType extends Item['type'], TConstructed>(importer: EventImporter, type: TType, construct: (item: Item & { type: TType }, meta: { index: number, languageCode: string, id: Item['id'] }) => TConstructed) => {
@@ -559,6 +563,7 @@ export const startDataLoadProgress = (importer: EventImporter) => {
       performer: 0,
       session: 0,
       venue: 0,
+      venueCategory: 0,
     }
   }
 }

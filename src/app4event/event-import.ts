@@ -40,6 +40,7 @@ export const createImporter = async (settings: Settings) => {
       group: {} as Record<string, Group>,
       language: {} as Record<string, Language>,
       day: {} as Record<string, Day>,
+      venueCategory: {} as Record<string, VenueCategory>,
     },
     errorReportExamples: settings.errorReportExamples ?? 1,
   }
@@ -72,6 +73,7 @@ export const createImporterFromState = async (settings: Settings, state: Partial
       group: {} as Record<string, Group>,
       language: {} as Record<string, Language>,
       day: {} as Record<string, Day>,
+      venueCategory: {} as Record<string, VenueCategory>,
     },
     errorReportExamples: settings.errorReportExamples ?? 1,
   }
@@ -87,6 +89,7 @@ export const deleteUnreferenced = async (importer: EventImporter) => {
   await pruneLanguagesCollection('venue')
   await pruneLanguagesCollection('group')
   await pruneLanguagesCollection('day')
+  await pruneLanguagesCollection('venueCategory')
 
   async function getKeepIds(ent: Item['type']) {
     const downloadedIds: string[] = await importer.store.get(`${ent}-ids`) ?? []
@@ -100,6 +103,7 @@ export const deleteUnreferenced = async (importer: EventImporter) => {
       venue: firestore.path['/languages/{lang}/venues'],
       group: firestore.path['/languages/{lang}/groups'],
       day: firestore.path['/languages/{lang}/days'],
+      venueCategory: firestore.path['/languages/{lang}/venueCategories'],
     }
     return choices[ent]
   }
@@ -190,6 +194,31 @@ const saveDays = async (importer: EventImporter) => {
     )
   )
   probe.savedItemsOfType({ importer, type: 'day' })
+}
+
+const saveVenueCategories = async (importer: EventImporter) => {
+  probe.savingItemsOfType({ importer, type: 'venueCategory' })
+  const constructed = await constructItems(importer, 'venueCategory', (item, meta) => {
+    return {
+      ...item,
+      language: meta.languageCode,
+      data: {
+        ...item?.data,
+        id: meta.id,
+      },
+    }
+  })
+  const validated = await validateItems(importer, constructed.results)
+  await util.settle(
+    validated.results.map(item =>
+      firestore.save(
+        importer.firestore,
+        firestore.path['/languages/{lang}/venueCategories/{id}']({ lang: item.language, id: item.id }),
+        item.data
+      )
+    )
+  )
+  probe.savedItemsOfType({ importer, type: 'venueCategory' })
 }
 
 const saveVenues = async (importer: EventImporter) => {
@@ -425,6 +454,7 @@ export const upload = async (importer: EventImporter) => {
   await uploadLoading(importer, [
     () => saveLanguages(importer),
     () => saveDays(importer),
+    () => saveVenueCategories(importer),
     () => saveVenues(importer),
     () => savePerformers(importer),
     () => saveSessions(importer),
@@ -466,6 +496,7 @@ export type Performer = Item & { type: 'performer' }
 export type Group = Item & { type: 'group' }
 export type Language = Item & { type: 'language' }
 export type Day = Item & { type: 'day' }
+export type VenueCategory = Item & { type: 'venueCategory' }
 
 export type Item = { id: string; type: string; language: string } & (
   | {
@@ -496,10 +527,7 @@ export type Item = { id: string; type: string; language: string } & (
     }
   | {
       type: 'venue'
-      data: Partial<entity.Venue> &
-        Pick<entity.Venue, 'id'> & {
-          categories?: entity.VenueCategory[]
-        }
+      data: Partial<entity.Venue> & Pick<entity.Venue, 'id'>
     }
   | {
       type: 'day'
@@ -518,6 +546,10 @@ export type Item = { id: string; type: string; language: string } & (
   | {
       type: 'language'
       data: Partial<entity.Language> & Pick<entity.Language, 'id'>
+    }
+  | {
+      type: 'venueCategory'
+      data: Partial<entity.VenueCategory> & Pick<entity.VenueCategory, 'id'>
     }
 )
 export interface Settings {

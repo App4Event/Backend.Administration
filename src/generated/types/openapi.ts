@@ -63,7 +63,7 @@ export interface components {
       customFields?: components["schemas"]["CustomField"][];
       location?: components["schemas"]["Location"];
       images?: components["schemas"]["Image"][];
-      categories?: components["schemas"]["VenueCategory"][];
+      categories?: components["schemas"]["VenueVenueCategory"][];
     };
     Session: {
       id: string;
@@ -126,10 +126,20 @@ export interface components {
       images?: components["schemas"]["Image"][];
     };
     Tag: string;
-    VenueCategory: {
+    /** VenueCategory reference in Venue */
+    VenueVenueCategory: {
+      id: string;
       name: string;
       color: string;
       iconUnicode: string;
+    };
+    /** Standalone VenueCategory */
+    VenueCategory: {
+      id: string;
+      name: string;
+      color: string;
+      iconUnicode: string;
+      order: number;
     };
   };
 }
