@@ -1,0 +1,79 @@
+openapi: '3.0.3'
+info:
+  title: App4Event FirestoreSchema
+  version: '1.0'
+  description: |
+    This is the API schema for App4Event.
+
+    ⚠️ All responses are documented as _a data schema_ of the document. If you call the API, you will receive raw Firestore REST API document, an instance of [projects.databases.documents](https://cloud.google.com/firestore/docs/reference/rest/v1/projects.databases.documents#Document).
+servers:
+  - url: https://firestore.googleapis.com/v1/projects/{YOUR_PROJECT_ID}/databases/(default)/documents
+    variables:
+      YOUR_PROJECT_ID:
+        default: a4e-dackeethlon
+        description: Event Firestore Project ID
+security:
+  - GoogleAuth: [firestore]
+paths:
+  /languages/{language}/performers/{performer}:
+    get:
+      parameters:
+        - name: language
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: performer
+          in: path
+          required: true
+          schema:
+            type: string
+      tags:
+        - Firestore
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Performer'
+components:
+  securitySchemes:
+    GoogleAuth:
+      type: http
+      scheme: bearer
+      description: |
+
+        To use Firestore REST API, you need to authenticate with one of scopes  "https://www.googleapis.com/auth/datastore" or "https://www.googleapis.com/auth/cloud-platform"
+
+        You can use one of the following methods to authenticate.
+
+        ### Authenticate OAuth 2.0 Playground
+        1. Go to [https://developers.google.com/oauthplayground](https://developers.google.com/oauthplayground)
+        2. Put `https://www.googleapis.com/auth/datastore` in the APIs field
+        3. Click "Authorize APIs"
+        4. Click "Exchange authorization code for tokens"
+        5. Copy the `access_token`
+
+        ### Authenticate with gcloud
+        1. Login default with scopes `gcloud auth application-default login`
+        2. Print access token `gcloud auth application-default print-access-token`
+
+        ### References
+        - https://firebase.google.com/docs/firestore/use-rest-api
+        - https://cloud.google.com/firestore/docs/reference/rest/v1/projects.databases.documents/get
+  schemas:
+    Performer:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        public:
+          type: boolean
+      required:
+        - id
+        - name
+        - public
+
