@@ -1,62 +1,19 @@
 {
-  "name": "app4event-backend",
+  "name": "app4event-backend-administration",
   "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
   "scripts": {
-    "build": "tsc",
-    "test": "tsx --test $(find src -name \"*.test.ts\")",
-    "lint": "eslint '**/*.ts' -f codeframe",
-    "prepare": "npm run build",
-    "prepublish": "npm run build",
-    "build-static": "npm run build-static:schema && npm run build-static:types",
-    "build-static:schema": "npx --package @openapitools/openapi-generator-cli openapi-generator-cli generate -i src/app4event/openapi.yaml -g openapi -o src/generated/openapi",
-    "build-static:types": "npx openapi-typescript src/app4event/openapi.yaml --output src/generated/types/openapi.ts",
-    "cs:eslint:check": "eslint --ignore-path .gitignore '**/*.ts' -f codeframe",
-    "cs:eslint:fix": "npm run cs:eslint:check -- --fix",
-    "cs:prettier:check": "prettier --ignore-path .gitignore --check '**/*.{ts,js,json,md}'",
-    "cs:prettier:fix": "npm run cs:prettier:check -- --write '**/*.{ts,js,json,md}'"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "engines": {
-    "node": "20"
-  },
-  "files": [
-    "lib/**",
-    "src/**",
-    "firestore.rules"
-  ],
-  "bin": {
-    "a4e-createAdmin": "./bin/create-admin.js",
-    "a4e-setPassword": "./bin/set-password.js"
-  },
-  "main": "lib/index.js",
-  "dependencies": {
-    "@ackee/styleguide-backend-config": "^0.5.0",
-    "@types/node": "^20.16.14",
-    "@types/sanitize-html": "^2.3.1",
-    "@types/uuid": "^8.3.0",
-    "@typescript-eslint/eslint-plugin": "^3.9.1",
-    "@typescript-eslint/parser": "^3.8.0",
-    "airtable": "^0.11.1",
-    "ajv": "^8.2.0",
-    "eslint": "^7.25.0",
-    "eslint-plugin-import": "^2.22.0",
-    "firebase-admin": "^12.6.0",
-    "firebase-functions": "^6.0.1",
-    "google-auth-library": "^7.1.1",
-    "got": "^11.8.6",
-    "iso-639-1": "^2.1.9",
-    "lodash": "^4.17.21",
-    "open": "^8.2.0",
-    "prettier": "^2.2.1",
-    "sanitize-html": "^2.4.0",
-    "typescript": "^5.6.3",
-    "uuid": "^8.3.2"
-  },
+  "author": "Jiri Smolik <jiri.smolik@ackee.cz>",
+  "license": "ISC",
   "devDependencies": {
-    "@openapitools/openapi-generator-cli": "^2.2.6",
-    "firebase-functions-test": "^0.2.0",
-    "json-schema-to-typescript": "^10.1.4",
-    "openapi-typescript": "^3.2.3",
-    "tsx": "^4.19.2"
+    "@types/node": "^22.10.5",
+    "typescript": "^5.7.3"
   },
-  "private": true
+  "dependencies": {
+    "firebase-admin": "^13.0.2"
+  }
 }

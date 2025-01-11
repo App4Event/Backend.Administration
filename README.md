@@ -1,41 +1,8 @@
 # App4Event Backend.Administration
 
-Node.js SDK for your App4Event backend.
 
-## Usage
+## TODO
 
-- TODO Backend usage, how to use the SDK
-- TODO firestore rules copy, how to setup firestore rules
-- TODO description of entities is always stripped from html, something that always happens during import
-- TODO If HTTP function for import returns 403, grant it permissions to be invoked with unauthenticated users https://cloud.google.com/functions/docs/securing/managing-access-iam#gcloud_4
-
-Once you install this SDK via npm, `a4e-*` commands described below are made available to you.
-
-### `a4e-createAdmin`
-
-Run `a4e-createAdmin PROJECT USERNAME PASSWORD` to create account with this username and password in the given firebase project.
-
-- If user with USERNAME does not exist, it is created
-- If user with USERNAME exists, their admin flag is set to TRUE but password is not changed (use `a4e-setPassword` to set the password of existing user)
-
-### `a4e-setPassword`
-
-Run `a4e-setPassword PROJECT USERNAME PASSWORD` to set user's password in the given firebase project.
-
-- If user with USERNAME does not exist, nothing happens (user `a4e-createAdmin` to create non-existing admin account)
-- If user with USERNAME exists, their password is updated to PASSWORD
-
-## Development notes
-
-### OpenAPI
-
-Core TypeScript interfaces and runtime validation is derived from OpenAPI specification (see `src/app4event/openapi.yaml`). This is part of the build process.
-
-### Build & compilation
-
-Building this lib via `npm run build` consists of
-1. compile yaml to json (yaml is better for human writing, json schema can be passed to ajv for validation)
-`npx openapi-generator-cli generate -i src/app4event/openapi.yaml -g openapi -o src/generated/openapi`
-2. compile yaml to ts interfaces
-`npx openapi-typescript src/app4event/openapi.yaml --output src/generated/types/openapi.ts`
-3. `tsc` compile typescript
+- [ ] Read data from Airtable
+- [ ] Schemas for Firestore and Import
+- [ ] Create admin user (create, reset password)

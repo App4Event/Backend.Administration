@@ -1,7 +1,6 @@
 import { generateColumnMappingWithOpenAI } from '../../ai/column-mapping'
 import { airtable } from '../../airtable'
 import { httpApi, HttpApiFetch } from '../../http-api'
-import { App } from 'firebase-admin/app'
 import { firestoreAiCache } from './firestore-ai-cache'
 
 const getCachedValue = <
