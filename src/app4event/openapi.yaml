@@ -44,6 +44,7 @@ components:
             - SPOTIFY
             - APPLEMUSIC
             - TIKTOK
+            - X
         uri:
           type: string
       required:

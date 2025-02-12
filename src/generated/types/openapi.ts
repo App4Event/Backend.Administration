@@ -37,7 +37,8 @@ export interface components {
         | "INSTAGRAM"
         | "SPOTIFY"
         | "APPLEMUSIC"
-        | "TIKTOK";
+        | "TIKTOK"
+        | "X";
       uri?: string;
     };
     Performer: {
