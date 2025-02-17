@@ -1,4 +1,4 @@
-import { HttpApiFetch } from '../http-api'
+import { HttpApiRequestFunction } from '../http-api'
 
 export class AIError extends Error {
   constructor(public readonly innerError: unknown) {
@@ -6,7 +6,11 @@ export class AIError extends Error {
   }
 }
 
-const v1ChatCompletions = async (request: HttpApiFetch, openaiApiKey: string, prompt: string) => {
+const v1ChatCompletions = async (
+  request: HttpApiRequestFunction,
+  openaiApiKey: string,
+  prompt: string
+) => {
   const { response } = await request({
     url: 'https://api.openai.com/v1/chat/completions',
     method: 'POST',

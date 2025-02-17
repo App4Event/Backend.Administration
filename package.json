@@ -5,15 +5,26 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "tsx --test $(find src -name \"*.test.ts\")",
+    "build": "vite build --target es2020 --outDir build/cjs --config vite.config.js",
+    "build:firestore-schema": "docker build -f src/schema/Dockerfile --output=src/etl/ src/schema",
+    "docs:dev": "vitepress dev docs",
+    "docs:build": "vitepress build docs",
+    "docs:preview": "vitepress preview docs"
   },
   "author": "Jiri Smolik <jiri.smolik@ackee.cz>",
   "license": "ISC",
   "devDependencies": {
     "@types/node": "^22.10.5",
-    "typescript": "^5.7.3"
+    "prettier": "^3.4.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "vite": "^6.0.7",
+    "vite-plugin-dts": "^4.5.0",
+    "vitepress": "^1.6.1"
   },
   "dependencies": {
-    "firebase-admin": "^13.0.2"
+    "firebase-admin": "^13.0.2",
+    "p-limit": "^6.2.0"
   }
 }

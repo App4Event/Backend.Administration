@@ -1,6 +1,8 @@
-import { fetchBaseSchema, FetchBaseSchemaError } from './schema';
-
+import { findBaseSchema, FindBaseSchemaError } from './schema';
+import { findAllTableRows, FindTableRowsError } from './table-rows';
 export const airtable = {
-  fetchBaseSchema,
-  FetchBaseSchemaError
+  findBaseSchema,
+  FindBaseSchemaError,
+  findAllTableRows,
+  FindTableRowsError
 }

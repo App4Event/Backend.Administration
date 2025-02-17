@@ -1,4 +1,4 @@
-import { HttpApiFetch } from '../http-api'
+import { HttpApiRequestFunction } from '../http-api'
 import { openai } from './openai'
 
 export const createPrompt = (
@@ -11,7 +11,7 @@ events, conferences, music festivals are your domain.`
   const destinationFields = Object.entries(shape)
     .map(([key, value]) => `'${key}': ${value}`)
     .join('\n')
-  const I = `Instructions: Find a mapping of one set of fields to another by
+  const I = `Instructions: Find a mapping from one set of fields to another by
 matching a field based on their description that fits the most.
 Source fields: ${sourceFields},
 Destination fields: ${destinationFields}`
@@ -25,7 +25,7 @@ just valid JSON.`
 }
 
 export const generateColumnMappingWithOpenAI = async (
-  request: HttpApiFetch,
+  request: HttpApiRequestFunction,
   openaiApiKey: string,
   columnNames: string[],
   shape: Record<string, string>

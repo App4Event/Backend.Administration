@@ -21,6 +21,14 @@ const setDocument = async (app: App, path: string, value: Document) => {
   await getFirestore(app).doc(path).set(serialize(value))
 }
 
+const setDocuments = async (app: App, documents: { path: string; value: Document }[]) => {
+  const batch = getFirestore(app).batch()
+  documents.forEach(({ path, value }) =>
+    batch.set(getFirestore(app).doc(path), serialize(value))
+  )
+  await batch.commit()
+}
+
 const serialize = (value: unknown): DocumentData => {
   if (value instanceof Date) {
     return Timestamp.fromDate(value)
@@ -66,6 +74,7 @@ const getDocument = async (app: App, path: string) => {
 
 export const firestore = {
   setDocument,
+  setDocuments,
   getDocument,
   getApp,
   serialize,

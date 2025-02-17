@@ -21,7 +21,7 @@ describe('feat/ai-column-mapping', () => {
         'name.en': 'Name EN',
       })
     )
-    const mockFetchBaseSchema = t.mock.fn(() =>
+    const mockFindBaseSchema = t.mock.fn(() =>
       Promise.resolve({
         tables: [
           {
@@ -33,7 +33,7 @@ describe('feat/ai-column-mapping', () => {
     )
     await aiColumnMapping.warmupCache(conf, {
       generateColumnMappingWithAI: mockFindMapping,
-      fetchBaseSchema: mockFetchBaseSchema,
+      findBaseSchema: mockFindBaseSchema,
     })
     equal(mockFindMapping.mock.calls.length, 1)
     equal(mockFindMapping.mock.calls[0].arguments.at(1), 'openaiapikey')
@@ -59,7 +59,7 @@ describe('feat/ai-column-mapping', () => {
       'baseid',
       'openaiapikey'
     )
-    const mockFetchBaseSchema = t.mock.fn(async () => ({
+    const mockFindBaseSchema = t.mock.fn(async () => ({
       tables: [
         {
           name: 'Table',
@@ -76,7 +76,7 @@ describe('feat/ai-column-mapping', () => {
     )
     await aiColumnMapping.warmupCache(conf, {
       generateColumnMappingWithAI: mockFindMapping,
-      fetchBaseSchema: mockFetchBaseSchema,
+      findBaseSchema: mockFindBaseSchema,
     })
     equal(mockFindMapping.mock.calls.length, 1)
     const mockAiFirestoreCache = {
@@ -87,7 +87,7 @@ describe('feat/ai-column-mapping', () => {
     }
     await aiColumnMapping.warmupCache(conf, {
       generateColumnMappingWithAI: mockFindMapping,
-      fetchBaseSchema: mockFetchBaseSchema,
+      findBaseSchema: mockFindBaseSchema,
       aiCache: mockAiFirestoreCache,
     })
     equal(mockFindMapping.mock.calls.length, 1)

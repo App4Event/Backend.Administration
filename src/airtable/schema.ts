@@ -1,5 +1,5 @@
-import { HttpApiFetch } from '../http-api'
-import { withApiKey } from './request'
+import { httpApi, HttpApiRequestFunction } from '../http-api'
+import { requestWithApiKeyAuthorization } from './authorization'
 
 export interface BaseSchema {
   tables: TableSchema[]
@@ -14,14 +14,17 @@ export interface FieldSchema {
   name: string
 }
 
-export class FetchBaseSchemaError extends Error {}
+export class FindBaseSchemaError extends Error {}
 
-export const fetchBaseSchema = async (
-  request: HttpApiFetch,
+/**
+ * @see https://airtable.com/developers/web/api/get-base-schema
+ */
+export const findBaseSchema = async (
   airtableApiKey: string,
-  baseId: string
+  baseId: string,
+  request: HttpApiRequestFunction = httpApi.request,
 ): Promise<BaseSchema> => {
-  const { response } = await withApiKey(
+  const { response } = await requestWithApiKeyAuthorization(
     airtableApiKey,
     request
   )({
@@ -32,7 +35,7 @@ export const fetchBaseSchema = async (
     method: 'GET',
   })
   if (response.status !== 200) {
-    throw new FetchBaseSchemaError(response.text)
+    throw new FindBaseSchemaError(response.text)
   }
   const res = JSON.parse(response.text)
   return {

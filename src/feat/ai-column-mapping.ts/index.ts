@@ -1,6 +1,6 @@
 import { generateColumnMappingWithOpenAI } from '../../ai/column-mapping'
 import { airtable } from '../../airtable'
-import { httpApi, HttpApiFetch } from '../../http-api'
+import { httpApi, HttpApiRequestFunction } from '../../http-api'
 import { firestoreAiCache } from './firestore-ai-cache'
 
 const getCachedValue = <
@@ -49,13 +49,13 @@ type Configured = ReturnType<typeof configure>
 export type WarmupOptions = {
   generateColumnMappingWithAI?: typeof generateColumnMappingWithOpenAI
   fetch?: typeof httpApi.request
-  fetchBaseSchema?: typeof airtable.fetchBaseSchema
+  findBaseSchema?: typeof airtable.findBaseSchema
   aiCache?: typeof firestoreAiCache
 }
 
 const generateMapping = async (
   aiCache: typeof firestoreAiCache | undefined,
-  fetch: HttpApiFetch,
+  fetch: HttpApiRequestFunction,
   openaiApiKey: string,
   generateColumnMappingWithAI: typeof generateColumnMappingWithOpenAI,
   tableFields: string[],
@@ -82,14 +82,14 @@ const generateMapping = async (
 const warmupCache = async (conf: Configured, options?: WarmupOptions) => {
   const {
     fetch = httpApi.request,
-    fetchBaseSchema = airtable.fetchBaseSchema,
+    findBaseSchema = airtable.findBaseSchema,
     generateColumnMappingWithAI = generateColumnMappingWithOpenAI,
     aiCache,
   } = options ?? {}
-  const tableSchema = await fetchBaseSchema(
-    fetch,
+  const tableSchema = await findBaseSchema(
     conf.airtableApiKey,
-    conf.baseId
+    conf.baseId,
+    fetch,
   )
   await Promise.all(
     Object.entries(conf.description).map(async ([tableName, fields]) => {
