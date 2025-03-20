@@ -13,6 +13,7 @@ export {
   Group as ImportGroup,
   Day as ImportDay,
   VenueCategory as ImportVenueCategory,
+  Highlight as ImportHighlight,
   sanitizeCustomFields,
 } from './event-import'
 export * as filmchief from './filmchief'

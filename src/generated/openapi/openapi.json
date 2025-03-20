@@ -268,6 +268,30 @@
         "required" : [ "uri" ],
         "type" : "object"
       },
+      "Highlight" : {
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "title" : {
+            "type" : "string"
+          },
+          "thumbnail" : {
+            "$ref" : "#/components/schemas/Image"
+          },
+          "images" : {
+            "items" : {
+              "$ref" : "#/components/schemas/Image"
+            },
+            "type" : "array"
+          },
+          "order" : {
+            "type" : "number"
+          }
+        },
+        "required" : [ "id", "images", "order", "thumbnail", "title" ],
+        "type" : "object"
+      },
       "News" : {
         "properties" : {
           "id" : {

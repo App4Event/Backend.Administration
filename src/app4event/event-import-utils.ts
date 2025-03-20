@@ -1,5 +1,5 @@
 import * as entity from './entity'
-import { Day, EventImporter, Group, Item, Language, Performer, Session, upload, Venue, VenueCategory } from './event-import'
+import { Day, EventImporter, Group, Highlight, Item, Language, Performer, Session, Venue, VenueCategory } from './event-import'
 import * as firestore from './firestore'
 import * as util from './util'
 import * as errors from './errors'
@@ -164,16 +164,21 @@ const typeToGetImages = {
   venue: (x: Venue) => x.data.images,
   day: (_: Day) => [] as entity.Image[],
   venueCategory: (_: VenueCategory) => [] as entity.Image[],
+  highlight: (x: Highlight) => [x.data.thumbnail, ...x.data.images ?? []],
 }
 
-const typeToSetImages = {
+const typeToSetImages: Record<Item['type'], (item: any, images: entity.Image[]) => void> = {
   performer: (x: Performer, images: entity.Image[]) => { x.data.images = images },
   session: (x: Session, images: entity.Image[]) => { x.data.images = images },
   group: (x: Group, images: entity.Image[]) => { x.data.images = images },
-  language: (_: Language) => [] as entity.Image[],
+  language: (_: Language, _images: entity.Image[]) => {},
   venue: (x: Venue, images: entity.Image[]) => { x.data.images = images },
-  day: (_: Day) => [] as entity.Image[],
-  venueCategory: (_: VenueCategory) => [] as entity.Image[],
+  day: (_: Day, _images: entity.Image[]) => {},
+  venueCategory: (_: VenueCategory, _images: entity.Image[]) => {},
+  highlight: (x: Highlight, images: entity.Image[]) => {
+    x.data.thumbnail = images[0]
+    x.data.images = images.slice(1)
+  },
 }
 
 const reuploadImage = async <T extends Item>(importer: EventImporter, item: T, image: entity.Image) => {
@@ -192,13 +197,17 @@ const reuploadImages = async <TItem extends Item>(importer: EventImporter, item:
   // @ts-ignore TS2590: Expression produces a union type that is too complex to represent.
   const images = getImages(item as any) ?? []
   if (!images.length) return
-  const result = await util.settle(images.filter(x => x).map(async x => {
-    const reuploaded = await reuploadImage(importer, item, x)
-    return {
-      reuploaded,
-      original: x,
-    }
-  }))
+  const result = await util.settle(
+    images
+      .filter((x): x is NonNullable<typeof x> => !!x)
+      .map(async x => {
+        const reuploaded = await reuploadImage(importer, item, x)
+        return {
+          reuploaded,
+          original: x,
+        }
+      })
+  )
   reportErrors(importer, result.errors)
   const reuploaded = result.results.map(x => x.reuploaded).filter(x => x).map(x => x!)
   const setImages = typeToSetImages[item.type]
@@ -564,6 +573,7 @@ export const startDataLoadProgress = (importer: EventImporter) => {
       session: 0,
       venue: 0,
       venueCategory: 0,
+      highlight: 0,
     }
   }
 }

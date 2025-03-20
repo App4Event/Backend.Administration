@@ -95,6 +95,15 @@ export const path = {
     lang: string
     id: string
   }) => `/languages/${lang}/venueCategories/${id}`,
+  '/languages/{lang}/highlights': ({ lang }: { lang: string }) =>
+    `/languages/${lang}/highlights`,
+  '/languages/{lang}/highlights/{id}': ({
+    lang,
+    id,
+  }: {
+    lang: string
+    id: string
+  }) => `/languages/${lang}/highlights/${id}`,
 }
 
 export const save = async (conn: FirestoreConnection, path: string, doc: any) => {

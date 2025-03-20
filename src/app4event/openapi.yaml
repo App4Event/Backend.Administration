@@ -213,6 +213,27 @@ components:
           type: string
       required:
         - uri
+    Highlight:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        thumbnail:
+          $ref: '#/components/schemas/Image'
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
+        order:
+          type: number
+      required:
+        - id
+        - title
+        - thumbnail
+        - images
+        - order
     News:
       type: object
       properties:

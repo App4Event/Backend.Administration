@@ -42,6 +42,9 @@ const createCompiledSchemaForType = util.memoize((type: eventImport.Item['type']
     if (type === 'venueCategory') {
         return validator.compile(openapi.schema.components.schemas.VenueCategory)
     }
+    if (type === 'highlight') {
+        return validator.compile(openapi.schema.components.schemas.Highlight)
+    }
     return undefined
 })
 

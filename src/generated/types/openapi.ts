@@ -98,6 +98,13 @@ export interface components {
     UriImage: {
       uri: string;
     };
+    Highlight: {
+      id: string;
+      title: string;
+      thumbnail: components["schemas"]["Image"];
+      images: components["schemas"]["Image"][];
+      order: number;
+    };
     News: {
       id?: string;
       title?: string;
