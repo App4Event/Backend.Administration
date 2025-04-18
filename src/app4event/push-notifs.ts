@@ -100,7 +100,7 @@ const publishDelayedNewsList = async (f: firestore.FirestoreConnection, items: L
     items.forEach(item => {
         let publishError: string
         try {
-            const id = f.firestore.collection(firestore.path['/languages/{lang}/news']({ lang: item.language })).doc().id
+            const id = item.id
             const news: entity.News = {
                 id,
                 body: item.body,
