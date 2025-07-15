@@ -74,6 +74,7 @@ const listToBePublishedNews = async (
             return {
               language,
               firestorePath: x.ref.path,
+              isListed: data.isListed,
               body: data.body ?? '',
               id: x.id,
               publishError: data.publishError,
@@ -106,6 +107,7 @@ const publishDelayedNewsList = async (f: firestore.FirestoreConnection, items: L
                 body: item.body,
                 time: item.time,
                 title: item.title,
+                isListed: item.isListed ?? null!,
             }
             batch.set(
                 f.firestore.doc(firestore.path['/languages/{lang}/news/{id}']({ id, lang: item.language })),

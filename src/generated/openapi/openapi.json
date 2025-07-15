@@ -305,6 +305,9 @@
           },
           "time" : {
             "type" : "string"
+          },
+          "isListed" : {
+            "type" : "boolean"
           }
         },
         "type" : "object"

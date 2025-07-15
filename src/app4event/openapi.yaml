@@ -245,6 +245,8 @@ components:
           type: string
         time:
           type: string
+        isListed:
+          type: boolean
         # images
     DelayedNews:
       allOf:

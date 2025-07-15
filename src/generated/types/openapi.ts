@@ -110,6 +110,7 @@ export interface components {
       title?: string;
       body?: string;
       time?: string;
+      isListed?: boolean;
     };
     DelayedNews: components["schemas"]["News"] & {
       publishError?: string;
