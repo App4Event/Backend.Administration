@@ -103,8 +103,10 @@ components:
           type: string
         color:
           type: string
+          nullable: true
         iconUnicode:
           type: string
+          nullable: true
         links:
           type: array
           items:

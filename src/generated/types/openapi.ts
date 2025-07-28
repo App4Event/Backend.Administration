@@ -58,8 +58,8 @@ export interface components {
       name: string;
       order: number;
       description?: string;
-      color?: string;
-      iconUnicode?: string;
+      color?: string | null;
+      iconUnicode?: string | null;
       links?: components["schemas"]["Link"][];
       customFields?: components["schemas"]["CustomField"][];
       location?: components["schemas"]["Location"];

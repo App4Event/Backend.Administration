@@ -118,9 +118,11 @@
             "type" : "string"
           },
           "color" : {
+            "nullable" : true,
             "type" : "string"
           },
           "iconUnicode" : {
+            "nullable" : true,
             "type" : "string"
           },
           "links" : {
