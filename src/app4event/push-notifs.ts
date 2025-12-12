@@ -122,6 +122,8 @@ const publishDelayedNewsList = async (
         time: item.time,
         title: item.title,
         isListed: item.isListed ?? null!,
+        newsTabId: item.newsTabId,
+        images: item.images,
       }
       batch.set(
         f.firestore.doc(

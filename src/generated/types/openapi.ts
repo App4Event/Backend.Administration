@@ -113,6 +113,8 @@ export interface components {
       body?: string;
       time?: string;
       isListed?: boolean;
+      images?: components["schemas"]["Image"][];
+      newsTabId?: string[];
     };
     DelayedNews: components["schemas"]["News"] & {
       publishError?: string;

@@ -1,7 +1,7 @@
-openapi: "3.0.0"
+openapi: '3.0.0'
 info:
   title: app4event
-  version: "1.0"
+  version: '1.0'
 paths:
   /import:
     post:
@@ -160,7 +160,7 @@ components:
         images:
           type: array
           items:
-            $ref: "#/components/schemas/Image"
+            $ref: '#/components/schemas/Image'
         links:
           type: array
           items:
@@ -256,10 +256,17 @@ components:
           type: string
         isListed:
           type: boolean
-        # images
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
+        newsTabId:
+          type: array
+          items:
+            type: string
     DelayedNews:
       allOf:
-        - $ref: "#/components/schemas/News"
+        - $ref: '#/components/schemas/News'
         - type: object
           properties:
             publishError:
@@ -373,4 +380,3 @@ components:
         - id
         - name
         - icon
-    

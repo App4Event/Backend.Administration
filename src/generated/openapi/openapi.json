@@ -320,6 +320,18 @@
           },
           "isListed" : {
             "type" : "boolean"
+          },
+          "images" : {
+            "items" : {
+              "$ref" : "#/components/schemas/Image"
+            },
+            "type" : "array"
+          },
+          "newsTabId" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
           }
         },
         "type" : "object"
