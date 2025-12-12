@@ -59,6 +59,7 @@ export interface components {
       order: number;
       description?: string;
       color?: string | null;
+      timelineColor?: string | null;
       iconUnicode?: string | null;
       links?: components["schemas"]["Link"][];
       customFields?: components["schemas"]["CustomField"][];

@@ -121,6 +121,10 @@
             "nullable" : true,
             "type" : "string"
           },
+          "timelineColor" : {
+            "nullable" : true,
+            "type" : "string"
+          },
           "iconUnicode" : {
             "nullable" : true,
             "type" : "string"

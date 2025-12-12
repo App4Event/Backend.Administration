@@ -104,6 +104,9 @@ components:
         color:
           type: string
           nullable: true
+        timelineColor:
+          type: string
+          nullable: true
         iconUnicode:
           type: string
           nullable: true
@@ -370,3 +373,4 @@ components:
         - id
         - name
         - icon
+    
