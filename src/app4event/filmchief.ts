@@ -2,18 +2,18 @@ import got from 'got'
 import * as util from './util'
 
 export interface Image {
-  id: string;
-  fileExists: boolean;
-  fileName: string;
-  fileUrl: string;
+  id: string
+  fileExists: boolean
+  fileName: string
+  fileUrl: string
   /**
    * Preferred URL
    *
    * example: //filmchief.com/festivals/festivalname/files/img-999a999a9aa9.jpg
    **/
-  originalFileUrl: string;
-  tag?: null;
-  tags?: null;
+  originalFileUrl: string
+  tag?: null
+  tags?: null
 }
 
 /**
@@ -54,10 +54,13 @@ export const getImage = async (fc: FilmChiefConnection, imageId: number) => {
   }
 }
 
-export const connectFilmChief = async (settings: { apiKey: string, baseUrl: string, festivalIdentifier: string }) => {
+export const connectFilmChief = async (settings: {
+  apiKey: string
+  baseUrl: string
+  festivalIdentifier: string
+}) => {
   const apiKey = settings?.apiKey
-  const festivalIdentifier =
-    settings?.festivalIdentifier
+  const festivalIdentifier = settings?.festivalIdentifier
   const baseUrl = settings?.baseUrl
 
   const url = `https://${festivalIdentifier}.${baseUrl}/api/php`
@@ -77,4 +80,6 @@ export const connectFilmChief = async (settings: { apiKey: string, baseUrl: stri
   }
 }
 
-export type FilmChiefConnection = util.Unpromise<ReturnType<typeof connectFilmChief>>
+export type FilmChiefConnection = util.Unpromise<
+  ReturnType<typeof connectFilmChief>
+>

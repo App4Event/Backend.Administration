@@ -44,6 +44,8 @@ export const createSessionOutOfBoundsError = (
   })
 }
 
-export type SessionOutOfBoundsError = ReturnType<typeof createSessionOutOfBoundsError>
+export type SessionOutOfBoundsError = ReturnType<
+  typeof createSessionOutOfBoundsError
+>
 
 export type ImportError = ReturnType<typeof createImportError>
