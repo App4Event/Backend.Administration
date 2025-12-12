@@ -180,6 +180,10 @@ components:
           type: number
         forcedSessionDetail:
           type: boolean
+        customIcons:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomIcon'
       required:
         - id
         - performerIds
@@ -354,3 +358,15 @@ components:
       enum:
         - COMPACT
         - LARGE
+    CustomIcon:
+      type: object
+      description: Custom icon for a Session
+      properties:
+        name:
+          type: string
+        icon:
+          type: string
+      required:
+        - id
+        - name
+        - icon

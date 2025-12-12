@@ -84,6 +84,7 @@ export interface components {
       subsessionIds: string[];
       likes?: number;
       forcedSessionDetail?: boolean;
+      customIcons?: components["schemas"]["CustomIcon"][];
     };
     CustomField: {
       name?: string;
@@ -153,6 +154,11 @@ export interface components {
       layout: components["schemas"]["VenueCategoryLayout"];
     };
     VenueCategoryLayout: "COMPACT" | "LARGE";
+    /** Custom icon for a Session */
+    CustomIcon: {
+      name: string;
+      icon: string;
+    };
   };
 }
 
