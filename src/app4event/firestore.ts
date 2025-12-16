@@ -106,19 +106,30 @@ export const path = {
   }) => `/languages/${lang}/highlights/${id}`,
 }
 
-export const save = async (conn: FirestoreConnection, path: string, doc: any) => {
+export const save = async (
+  conn: FirestoreConnection,
+  path: string,
+  doc: any
+) => {
   const cleanedDoc = lodash.omitBy(doc, lodash.isUndefined)
   if (lodash.isEmpty(cleanedDoc)) return
   await conn.firestore.doc(path).set(cleanedDoc, { merge: true })
 }
 
-export const add = async (conn: FirestoreConnection, path: string, doc: any) => {
+export const add = async (
+  conn: FirestoreConnection,
+  path: string,
+  doc: any
+) => {
   const cleanedDoc = lodash.omitBy(doc, lodash.isUndefined)
   if (lodash.isEmpty(cleanedDoc)) return
   await conn.firestore.collection(path).add(doc)
 }
 
-export const getCollectionDocumentIds = async (conn: FirestoreConnection, collectionName: string) => {
+export const getCollectionDocumentIds = async (
+  conn: FirestoreConnection,
+  collectionName: string
+) => {
   const collection = conn.firestore.collection(collectionName)
   const limit = 50
   let lastItem: firebaseAdmin.firestore.QueryDocumentSnapshot | undefined
@@ -144,10 +155,16 @@ export const getCollectionDocumentIds = async (conn: FirestoreConnection, collec
  * @param settings
  * @returns
  */
-export const convertFirstoreKeys = <TItem extends Record<string, any>, TKey extends keyof TItem>(item: TItem, settings: {
-  dates?: TKey[];
-  geoPoints?: TKey[];
-}) => {
+export const convertFirstoreKeys = <
+  TItem extends Record<string, any>,
+  TKey extends keyof TItem
+>(
+  item: TItem,
+  settings: {
+    dates?: TKey[]
+    geoPoints?: TKey[]
+  }
+) => {
   const gpsOverride = settings.geoPoints?.reduce((override, prop) => {
     return {
       ...override,
@@ -166,7 +183,7 @@ export const convertFirstoreKeys = <TItem extends Record<string, any>, TKey exte
     ...datesOverride,
     ...gpsOverride,
   }
-  function objectToGeo(object?: { lat: any, lng: any }) {
+  function objectToGeo(object?: { lat: any; lng: any }) {
     if (!object) return null
     if (isNaN(Number(object.lat)) || isNaN(Number(object.lng))) {
       return null
@@ -177,14 +194,21 @@ export const convertFirstoreKeys = <TItem extends Record<string, any>, TKey exte
   }
 }
 
-export const revertFirestoreKeys = <TItem extends Record<string, any>, TKey extends keyof TItem>(item: TItem, settings: {
-  dates: TKey[]
-}) => {
+export const revertFirestoreKeys = <
+  TItem extends Record<string, any>,
+  TKey extends keyof TItem
+>(
+  item: TItem,
+  settings: {
+    dates: TKey[]
+  }
+) => {
   // TBA: Geolocation overrides
   const datesOverride = settings.dates.reduce((override, prop) => {
     return {
       ...override,
-      [prop]: (item[prop] as firebaseAdmin.firestore.Timestamp)?.toDate?.() ?? null,
+      [prop]:
+        (item[prop] as firebaseAdmin.firestore.Timestamp)?.toDate?.() ?? null,
     }
   }, {})
   return {
@@ -193,14 +217,17 @@ export const revertFirestoreKeys = <TItem extends Record<string, any>, TKey exte
   }
 }
 
-export const deleteCollectionDocumentsByIds = async (conn: FirestoreConnection, collectionName: string, ids: string[]) => {
-  await util.chunk(ids, 100)
-    .reduce(async (last, ids) => {
-      await last
-      const batch = conn.firestore.batch()
-      ids.forEach(id => {
-        batch.delete(conn.firestore.doc(`${collectionName}/${id}`))
-      })
-      await batch.commit()
-    }, Promise.resolve())
+export const deleteCollectionDocumentsByIds = async (
+  conn: FirestoreConnection,
+  collectionName: string,
+  ids: string[]
+) => {
+  await util.chunk(ids, 100).reduce(async (last, ids) => {
+    await last
+    const batch = conn.firestore.batch()
+    ids.forEach(id => {
+      batch.delete(conn.firestore.doc(`${collectionName}/${id}`))
+    })
+    await batch.commit()
+  }, Promise.resolve())
 }

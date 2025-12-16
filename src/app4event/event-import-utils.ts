@@ -1,5 +1,16 @@
 import * as entity from './entity'
-import { Day, EventImporter, Group, Highlight, Item, Language, Performer, Session, Venue, VenueCategory } from './event-import'
+import {
+  Day,
+  EventImporter,
+  Group,
+  Highlight,
+  Item,
+  Language,
+  Performer,
+  Session,
+  Venue,
+  VenueCategory,
+} from './event-import'
 import * as firestore from './firestore'
 import * as util from './util'
 import * as errors from './errors'
@@ -8,21 +19,24 @@ import * as validation from './validation'
 export type SavedState = util.Unpromise<ReturnType<typeof saveImporterState>>
 
 export const saveImporterState = async (importer: EventImporter) => {
-  const finished = importer.progress >= 1 ||
+  const finished =
+    importer.progress >= 1 ||
     // Loading data failure means no data, therefore no import
     !!importer.errors.find(x => x.message === errors.LOADING_DATA_FAILED)
   const progress = finished ? 1 : importer.progress
-  const errorSummary = Object.entries(util.countBy(importer.errors, x => x.message))
-    .reduce<string[]>((summary, entry) => {
-      return summary.concat(`${entry[0]}: ${entry[1]}x`)
-    }, [])
-    .join(', ') || 'No errors'
+  const errorSummary =
+    Object.entries(util.countBy(importer.errors, x => x.message))
+      .reduce<string[]>((summary, entry) => {
+        return summary.concat(`${entry[0]}: ${entry[1]}x`)
+      }, [])
+      .join(', ') || 'No errors'
 
-  const warningSummary = Object.entries(util.countBy(importer.warnings, x => x.message))
-    .reduce<string[]>((summary, entry) => {
-      return summary.concat(`${entry[0]}: ${entry[1]}x`)
-    }, [])
-    .join(', ') || 'No warnings'
+  const warningSummary =
+    Object.entries(util.countBy(importer.warnings, x => x.message))
+      .reduce<string[]>((summary, entry) => {
+        return summary.concat(`${entry[0]}: ${entry[1]}x`)
+      }, [])
+      .join(', ') || 'No warnings'
 
   const state = {
     importId: importer.importId,
@@ -39,25 +53,30 @@ export const saveImporterState = async (importer: EventImporter) => {
     id: importer.importId,
   }
   await Promise.allSettled([
-    firestore.save(
-      importer.firestore,
-      'imports/info',
-      state
-    ),
-    !importer.trackOnlyDataInFirestore && importer.importId && firestore.save(
-      importer.firestore,
-      firestore.path['/imports/{id}']({ id: importer.importId }),
-      firestore.convertFirstoreKeys(state, { dates: ['endAt', 'endTime', 'startAt', 'startTime'] })
-    ),
+    firestore.save(importer.firestore, 'imports/info', state),
+    !importer.trackOnlyDataInFirestore &&
+      importer.importId &&
+      firestore.save(
+        importer.firestore,
+        firestore.path['/imports/{id}']({ id: importer.importId }),
+        firestore.convertFirstoreKeys(state, {
+          dates: ['endAt', 'endTime', 'startAt', 'startTime'],
+        })
+      ),
   ])
   return state
 }
 
-export function updateProgress(stage: 'savingToDatabase', opts?: { step: number, maxSteps: number}): number
-export function updateProgress(stage: 'start' | 'ready' | 'collectingData' | 'finished'): number
+export function updateProgress(
+  stage: 'savingToDatabase',
+  opts?: { step: number; maxSteps: number }
+): number
+export function updateProgress(
+  stage: 'start' | 'ready' | 'collectingData' | 'finished'
+): number
 export function updateProgress(
   stage: 'start' | 'ready' | 'collectingData' | 'savingToDatabase' | 'finished',
-  opts?: { step: number, maxSteps: number }
+  opts?: { step: number; maxSteps: number }
 ): number {
   const progress: Record<typeof stage, number> = {
     start: 0,
@@ -68,7 +87,10 @@ export function updateProgress(
   }
   let progressValue = progress[stage]
   if (stage === 'savingToDatabase' && opts) {
-    progressValue = progress.savingToDatabase + (progress.finished - progress.savingToDatabase) * (opts.step / opts.maxSteps)
+    progressValue =
+      progress.savingToDatabase +
+      (progress.finished - progress.savingToDatabase) *
+        (opts.step / opts.maxSteps)
   }
   return Number(progressValue.toFixed(2))
 }
@@ -88,21 +110,23 @@ export const addItem = async (importer: EventImporter, item: Item) => {
   // performer sessions
   if (item.type === 'session' && item.data?.performerIds) {
     await Promise.all(
-      item.data.performerIds
-        ?.map(async performerId => {
-          const key = `performer2sessions:${performerId}`
-          await addUniq(key, item.id)
-        })
+      item.data.performerIds?.map(async performerId => {
+        const key = `performer2sessions:${performerId}`
+        await addUniq(key, item.id)
+      })
     )
   }
   // performer venues
-  if (item.type === 'session' && item.data?.venueId && item.data?.performerIds) {
+  if (
+    item.type === 'session' &&
+    item.data?.venueId &&
+    item.data?.performerIds
+  ) {
     await Promise.all(
-      item.data.performerIds
-        ?.map(async performerId => {
-          const key = `performer2venues:${performerId}`
-          await addUniq(key, item.data.venueId)
-        })
+      item.data.performerIds?.map(async performerId => {
+        const key = `performer2venues:${performerId}`
+        await addUniq(key, item.data.venueId)
+      })
     )
   }
   // sessions' parent session
@@ -123,11 +147,11 @@ export const addItem = async (importer: EventImporter, item: Item) => {
   if (item.type === 'group') {
     for (const id of item.data.performerIds ?? []) {
       const key = `group2performers:${item.id}`
-        await addUniq(key, id)
+      await addUniq(key, id)
     }
     for (const id of item.data.sessionIds ?? []) {
       const key = `group2sessions:${item.id}`
-        await addUniq(key, id)
+      await addUniq(key, id)
     }
   }
   if (item.type === 'performer' && item.data.groupId) {
@@ -164,15 +188,26 @@ const typeToGetImages = {
   venue: (x: Venue) => x.data.images,
   day: (_: Day) => [] as entity.Image[],
   venueCategory: (_: VenueCategory) => [] as entity.Image[],
-  highlight: (x: Highlight) => [x.data.thumbnail, ...x.data.images ?? []],
+  highlight: (x: Highlight) => [x.data.thumbnail, ...(x.data.images ?? [])],
 }
 
-const typeToSetImages: Record<Item['type'], (item: any, images: entity.Image[]) => void> = {
-  performer: (x: Performer, images: entity.Image[]) => { x.data.images = images },
-  session: (x: Session, images: entity.Image[]) => { x.data.images = images },
-  group: (x: Group, images: entity.Image[]) => { x.data.images = images },
+const typeToSetImages: Record<
+  Item['type'],
+  (item: any, images: entity.Image[]) => void
+> = {
+  performer: (x: Performer, images: entity.Image[]) => {
+    x.data.images = images
+  },
+  session: (x: Session, images: entity.Image[]) => {
+    x.data.images = images
+  },
+  group: (x: Group, images: entity.Image[]) => {
+    x.data.images = images
+  },
   language: (_: Language, _images: entity.Image[]) => {},
-  venue: (x: Venue, images: entity.Image[]) => { x.data.images = images },
+  venue: (x: Venue, images: entity.Image[]) => {
+    x.data.images = images
+  },
   day: (_: Day, _images: entity.Image[]) => {},
   venueCategory: (_: VenueCategory, _images: entity.Image[]) => {},
   highlight: (x: Highlight, images: entity.Image[]) => {
@@ -181,17 +216,27 @@ const typeToSetImages: Record<Item['type'], (item: any, images: entity.Image[]) 
   },
 }
 
-const reuploadImage = async <T extends Item>(importer: EventImporter, item: T, image: entity.Image) => {
+const reuploadImage = async <T extends Item>(
+  importer: EventImporter,
+  item: T,
+  image: entity.Image
+) => {
   // TODO Call importer.setings.upload for image
   // catch for error map
   try {
     return await importer.settings.reuploadImage!(image)
   } catch (error) {
-    throw errors.createImportError(importer, 'image-reupload-failed', { error, item })
+    throw errors.createImportError(importer, 'image-reupload-failed', {
+      error,
+      item,
+    })
   }
 }
 
-const reuploadImages = async <TItem extends Item>(importer: EventImporter, item: TItem) => {
+const reuploadImages = async <TItem extends Item>(
+  importer: EventImporter,
+  item: TItem
+) => {
   if (!importer.settings.reuploadImage) return
   const getImages = typeToGetImages[item.type]
   // @ts-ignore TS2590: Expression produces a union type that is too complex to represent.
@@ -209,34 +254,47 @@ const reuploadImages = async <TItem extends Item>(importer: EventImporter, item:
       })
   )
   reportErrors(importer, result.errors)
-  const reuploaded = result.results.map(x => x.reuploaded).filter(x => x).map(x => x!)
+  const reuploaded = result.results
+    .map(x => x.reuploaded)
+    .filter(x => x)
+    .map(x => x!)
   const setImages = typeToSetImages[item.type]
   // @ts-ignore TS2590: Expression produces a union type that is too complex to represent.
   setImages(item as any, reuploaded) as any
 }
 
-export const constructItems = async <TType extends Item['type'], TConstructed>(importer: EventImporter, type: TType, construct: (item: Item & { type: TType }, meta: { index: number, languageCode: string, id: Item['id'] }) => TConstructed) => {
+export const constructItems = async <TType extends Item['type'], TConstructed>(
+  importer: EventImporter,
+  type: TType,
+  construct: (
+    item: Item & { type: TType },
+    meta: { index: number; languageCode: string; id: Item['id'] }
+  ) => TConstructed
+) => {
   const ids: Array<Item['id']> = (await importer.store.get(`${type}-ids`)) || []
   const constructed = await util.settle(
     ids.flatMap((id, i) => {
-      return importer.settings.languages
-        .flatMap(async languageCode => {
-          const item = await populateId(importer, type, id, languageCode)
-          if (!item) throw errors.createImportError(importer, errors.NO_ITEM_DATA)
-          return construct(item, {
-            id,
-            languageCode,
-            index: i,
-          })
+      return importer.settings.languages.flatMap(async languageCode => {
+        const item = await populateId(importer, type, id, languageCode)
+        if (!item) throw errors.createImportError(importer, errors.NO_ITEM_DATA)
+        return construct(item, {
+          id,
+          languageCode,
+          index: i,
         })
+      })
     })
   )
   reportErrors(importer, constructed.errors, { marksItemInvalid: true })
   // TODO Better idea to let TConstructed be a (Promise<A> | A) but result in A here?
   // TConstructed here should be TItem
-  const constructedItems = constructed as Omit<typeof constructed, 'results'> & { results: Array<util.Unpromise<TConstructed>> }
+  const constructedItems = constructed as Omit<
+    typeof constructed,
+    'results'
+  > & { results: Array<util.Unpromise<TConstructed>> }
 
-  await util.chunk((constructedItems.results.flatMap(x => x) as Item[]), 20)
+  await util
+    .chunk(constructedItems.results.flatMap(x => x) as Item[], 20)
     .reduce(async (last, items) => {
       await last
       await Promise.all(items.map(item => reuploadImages(importer, item)))
@@ -244,11 +302,12 @@ export const constructItems = async <TType extends Item['type'], TConstructed>(i
   return constructedItems
 }
 
-export const validateItems = async <TItem extends Item>(importer: EventImporter, constructed: TItem[]) => {
+export const validateItems = async <TItem extends Item>(
+  importer: EventImporter,
+  constructed: TItem[]
+) => {
   const validated = await util.settle(
-    constructed.map(item =>
-      validation.validate(importer, item)
-    )
+    constructed.map(item => validation.validate(importer, item))
   )
   reportErrors(importer, validated.errors, { marksItemInvalid: true })
   return validated
@@ -259,14 +318,18 @@ export const validateItems = async <TItem extends Item>(importer: EventImporter,
  *
  * If opts.marksItemInvalid=true, related item won't be imported.
  */
- export const reportErrors = (importer: EventImporter, items: errors.ImportError[], opts?: { marksItemInvalid?: true}) => {
-    items.forEach(item => {
-      importer.errors.push(item)
-      if (opts?.marksItemInvalid && item.item) {
-        importer.invalidEntity[item.item.type][item.item.id] = item.item
-      }
-    })
-  }
+export const reportErrors = (
+  importer: EventImporter,
+  items: errors.ImportError[],
+  opts?: { marksItemInvalid?: true }
+) => {
+  items.forEach(item => {
+    importer.errors.push(item)
+    if (opts?.marksItemInvalid && item.item) {
+      importer.invalidEntity[item.item.type][item.item.id] = item.item
+    }
+  })
+}
 
 export const ensureError = (error: unknown) => {
   if (error instanceof Error) {
@@ -303,7 +366,10 @@ export const probe = (() => {
       importer: EventImporter
       type: Item['type']
     }) => {
-      const examples = getErrorExamples(importer, { entityType: type, samples: importer.errorReportExamples })
+      const examples = getErrorExamples(importer, {
+        entityType: type,
+        samples: importer.errorReportExamples,
+      })
       if (examples.invalidCount) {
         void addFirestoreLog(
           importer,
@@ -312,10 +378,18 @@ export const probe = (() => {
         )
       }
       if (examples.sessionOutOfBoundsCount) {
-        void addFirestoreLog(importer, `${examples.sessionOutOfBoundsCount} sessions will not be visible in the app, for example ${examples.sessionOutOfBoundsMessage}`, 'ERROR')
+        void addFirestoreLog(
+          importer,
+          `${examples.sessionOutOfBoundsCount} sessions will not be visible in the app, for example ${examples.sessionOutOfBoundsMessage}`,
+          'ERROR'
+        )
       }
       if (examples.venueMissingCategoriesCount) {
-        void addFirestoreLog(importer, `${examples.venueMissingCategoriesCount} venues will not be visible as pin on map, for example ${examples.venueMissingCategoriesMessage}`, 'WARNING')
+        void addFirestoreLog(
+          importer,
+          `${examples.venueMissingCategoriesCount} venues will not be visible as pin on map, for example ${examples.venueMissingCategoriesMessage}`,
+          'WARNING'
+        )
       }
     },
     addedItemsUpdated: (param: {
@@ -326,7 +400,11 @@ export const probe = (() => {
         .filter(x => x[1] > 0)
         .map(x => `${x[0]} ${x[1]}x`)
         .join(', ')
-      void addFirestoreLog(param.importer, `Loading from remote (${serializedCounts})`, 'INFO')
+      void addFirestoreLog(
+        param.importer,
+        `Loading from remote (${serializedCounts})`,
+        'INFO'
+      )
     },
     deletingUnreferencedDocuments: (importer: EventImporter) => {
       void addFirestoreLog(importer, 'Deleting unreferenced documents', 'INFO')
@@ -334,7 +412,8 @@ export const probe = (() => {
     importFinished: (importer: EventImporter) => {
       void addFirestoreLog(importer, 'Import finished', 'INFO')
     },
-    log: (event: { message: string, severity: 'INFO' | 'ERROR' | 'WARNING' }) => event,
+    log: (event: { message: string; severity: 'INFO' | 'ERROR' | 'WARNING' }) =>
+      event,
   })
   return p
   async function addFirestoreLog(
@@ -360,17 +439,22 @@ export const probe = (() => {
   }
 })()
 
-function getErrorExamples(importer: EventImporter, param: { samples: number, entityType: Item['type'] }) {
-  const invalidCount = Object.keys(importer.invalidEntity[param.entityType]).length
+function getErrorExamples(
+  importer: EventImporter,
+  param: { samples: number; entityType: Item['type'] }
+) {
+  const invalidCount = Object.keys(importer.invalidEntity[param.entityType])
+    .length
   let invalidMessage = ''
   if (invalidCount) {
-    const criticalErrors = importer.errors.filter((x): x is errors.ImportError => {
-      return (
-        (x.message === errors.INVALID_ITEM_DATA ||
-          x.message === errors.NO_VALIDATION_SCHEMA) &&
-        (x as errors.ImportError).item?.type === param.entityType
-      )
-    })
+    const criticalErrors = importer.errors
+      .filter((x): x is errors.ImportError => {
+        return (
+          (x.message === errors.INVALID_ITEM_DATA ||
+            x.message === errors.NO_VALIDATION_SCHEMA) &&
+          (x as errors.ImportError).item?.type === param.entityType
+        )
+      })
       .slice(0, param.samples)
       .map(x => serializeError(x))
     invalidMessage = criticalErrors.join(', ')
@@ -379,20 +463,29 @@ function getErrorExamples(importer: EventImporter, param: { samples: number, ent
   let sessionOutOfBoundsCount = 0
   let sessionOutOfBoundsMessage = ''
   if (param.entityType === 'session') {
-    const outOfBounds = importer.warnings.filter(x => x.message === errors.SESSION_OUT_OUF_BOUNDS).slice(0, param.samples) as errors.ImportError[]
+    const outOfBounds = importer.warnings
+      .filter(x => x.message === errors.SESSION_OUT_OUF_BOUNDS)
+      .slice(0, param.samples) as errors.ImportError[]
     sessionOutOfBoundsCount = outOfBounds.length
 
     if (outOfBounds.length) {
-      sessionOutOfBoundsMessage = outOfBounds.map(x => serializeSessionOutOfBoundsError(x)).join(', ')
+      sessionOutOfBoundsMessage = outOfBounds
+        .map(x => serializeSessionOutOfBoundsError(x))
+        .join(', ')
     }
   }
   let venueMissingCategoriesCount = 0
   let venueMissingCategoriesMessage = ''
   if (param.entityType === 'venue') {
-    const missingCategories = importer.warnings.filter(x => x.message === errors.MISSING_VENUE_CATEGORIES) as errors.ImportError[]
+    const missingCategories = importer.warnings.filter(
+      x => x.message === errors.MISSING_VENUE_CATEGORIES
+    ) as errors.ImportError[]
     venueMissingCategoriesCount += missingCategories.length
     if (missingCategories.length) {
-      venueMissingCategoriesMessage = missingCategories.slice(0, param.samples).map(x => serializeError(x)).join(', ')
+      venueMissingCategoriesMessage = missingCategories
+        .slice(0, param.samples)
+        .map(x => serializeError(x))
+        .join(', ')
     }
   }
   return {
@@ -401,7 +494,7 @@ function getErrorExamples(importer: EventImporter, param: { samples: number, ent
     sessionOutOfBoundsCount,
     sessionOutOfBoundsMessage,
     venueMissingCategoriesCount,
-    venueMissingCategoriesMessage
+    venueMissingCategoriesMessage,
   }
   function serializeSessionOutOfBoundsError(importError: errors.ImportError) {
     const example = importError.item as Session | undefined
@@ -415,7 +508,9 @@ function getErrorExamples(importer: EventImporter, param: { samples: number, ent
       err.dayBounds
         ? `but day starts on ${err.dayBounds[0].toLocaleString()} and ends ${err.dayBounds[1].toLocaleString()}`
         : 'but there is no such day in event',
-    ].filter(x => x).join(' ')
+    ]
+      .filter(x => x)
+      .join(' ')
   }
   function serializeError(err: errors.ImportError) {
     const exampleItem = err?.item
@@ -425,7 +520,9 @@ function getErrorExamples(importer: EventImporter, param: { samples: number, ent
       `id=${exampleItem?.id ?? ''}`,
       exampleName ? `name=${exampleName}` : '',
       reason,
-    ].filter(x => x).join(' ')
+    ]
+      .filter(x => x)
+      .join(' ')
   }
 }
 
@@ -550,16 +647,14 @@ export const startDataLoadProgress = (importer: EventImporter) => {
     }
     lastCounts = counts
   }
-  const t = setInterval(
-    () => {
-      if (importer.progress >= 0.3) { // Saving to database
-        clearInterval(t)
-        return
-      }
-      void readCurrentStatus()
-    },
-    1000
-  )
+  const t = setInterval(() => {
+    if (importer.progress >= 0.3) {
+      // Saving to database
+      clearInterval(t)
+      return
+    }
+    void readCurrentStatus()
+  }, 1000)
   return function destroy() {
     clearInterval(t)
   }
@@ -578,40 +673,85 @@ export const startDataLoadProgress = (importer: EventImporter) => {
   }
 }
 
-export const reportSessionsOutOfBounds = async (importer: EventImporter, sessions: Session[]) => {
-  const days = (await populateId(importer, 'day', await importer.store.get('day-ids'), importer.settings.defaultLanguage)) ?? []
+export const reportSessionsOutOfBounds = async (
+  importer: EventImporter,
+  sessions: Session[]
+) => {
+  const days =
+    (await populateId(
+      importer,
+      'day',
+      await importer.store.get('day-ids'),
+      importer.settings.defaultLanguage
+    )) ?? []
   if (!days.length) return
-  const dayRanges = days.map(x => [util.createDate(x.data.timeFrom)!, util.createDate(x.data.timeTo)!] as const)
+  const dayRanges = days
+    .map(
+      x =>
+        [
+          util.createDate(x.data.timeFrom)!,
+          util.createDate(x.data.timeTo)!,
+        ] as const
+    )
     .filter(x => x[0] && x[1])
-  const datestamp = (d: Date) => `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
+  const datestamp = (d: Date) =>
+    `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`
   sessions.forEach(session => {
     const from = util.createDate(session.data.timeFrom)
     const to = util.createDate(session.data.timeTo)
     if (!from || !to) return
 
-    const hasDay = dayRanges.find(x => (from >= x[0] && from <= x[1]) || (to >= x[0] && to <= x[1]))
+    const hasDay = dayRanges.find(
+      x => (from >= x[0] && from <= x[1]) || (to >= x[0] && to <= x[1])
+    )
     if (hasDay) return
 
     const startDayStamp = datestamp(from)
     const endDayStamp = datestamp(to)
 
-    const startDay = dayRanges.find(x => datestamp(x[0]) === startDayStamp || datestamp(x[1]) === startDayStamp)
-    const endDay = dayRanges.find(x => datestamp(x[0]) === endDayStamp || datestamp(x[1]) === endDayStamp)
+    const startDay = dayRanges.find(
+      x =>
+        datestamp(x[0]) === startDayStamp || datestamp(x[1]) === startDayStamp
+    )
+    const endDay = dayRanges.find(
+      x => datestamp(x[0]) === endDayStamp || datestamp(x[1]) === endDayStamp
+    )
     if (startDay) {
-      importer.warnings.push(errors.createImportError(importer, errors.SESSION_OUT_OUF_BOUNDS, {
-        error: errors.createSessionOutOfBoundsError(session, 'session-out-of-day', startDay, [from, to]),
-        item: session,
-      }))
+      importer.warnings.push(
+        errors.createImportError(importer, errors.SESSION_OUT_OUF_BOUNDS, {
+          error: errors.createSessionOutOfBoundsError(
+            session,
+            'session-out-of-day',
+            startDay,
+            [from, to]
+          ),
+          item: session,
+        })
+      )
     } else if (endDay) {
-      importer.warnings.push(errors.createImportError(importer, errors.SESSION_OUT_OUF_BOUNDS, {
-        error: errors.createSessionOutOfBoundsError(session, 'session-out-of-day', endDay, [from, to]),
-        item: session,
-      }))
+      importer.warnings.push(
+        errors.createImportError(importer, errors.SESSION_OUT_OUF_BOUNDS, {
+          error: errors.createSessionOutOfBoundsError(
+            session,
+            'session-out-of-day',
+            endDay,
+            [from, to]
+          ),
+          item: session,
+        })
+      )
     } else {
-      importer.warnings.push(errors.createImportError(importer, errors.SESSION_OUT_OUF_BOUNDS, {
-        error: errors.createSessionOutOfBoundsError(session, 'session-out-of-day', undefined, [from, to]),
-        item: session,
-      }))
+      importer.warnings.push(
+        errors.createImportError(importer, errors.SESSION_OUT_OUF_BOUNDS, {
+          error: errors.createSessionOutOfBoundsError(
+            session,
+            'session-out-of-day',
+            undefined,
+            [from, to]
+          ),
+          item: session,
+        })
+      )
     }
   })
 }

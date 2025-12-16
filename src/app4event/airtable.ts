@@ -5,17 +5,17 @@ import * as util from './util'
 export type Connection = ReturnType<typeof connect>
 
 export const connect = (opts: {
-    apiKey: string
-    /** base id */
-    base: string
+  apiKey: string
+  /** base id */
+  base: string
 }) => {
-    const instance = new Airtable({
-        apiKey: opts.apiKey,
-    })
-    return {
-        airtable: instance,
-        base: instance.base(opts.base),
-    }
+  const instance = new Airtable({
+    apiKey: opts.apiKey,
+  })
+  return {
+    airtable: instance,
+    base: instance.base(opts.base),
+  }
 }
 
 export interface TableRow<TRow> {
@@ -53,23 +53,28 @@ export type Date = string
 /**
  * @returns All rows of selected table
  */
-export const tableRows = async <TRow = any>(conn: Connection, tableName: string) => {
-    const result = conn.base.table(tableName).select()
-    const all = await result.all()
-    return all.map((x): TableRow<TRow> => {
-        return {
-            id: x.id,
-            data: x.fields as unknown as TRow,
-            row: x,
-        }
-    })
+export const tableRows = async <TRow = any>(
+  conn: Connection,
+  tableName: string
+) => {
+  const result = conn.base.table(tableName).select()
+  const all = await result.all()
+  return all.map(
+    (x): TableRow<TRow> => {
+      return {
+        id: x.id,
+        data: (x.fields as unknown) as TRow,
+        row: x,
+      }
+    }
+  )
 }
 
 export const FieldType = {
   Date: (x: any) => util.createDate(x),
-  String: (x: any) => x ? String(x) : undefined,
+  String: (x: any) => (x ? String(x) : undefined),
   Strings: (x: string[]) => x ?? [],
-  References: (x: any) => x ? (x as string[]) : [],
+  References: (x: any) => (x ? (x as string[]) : []),
   Any: (x: any) => x,
   Unknown: (x: unknown) => x,
   Attachments: (x: any): Image[] => (x ?? []).reverse(),
@@ -78,19 +83,25 @@ export const FieldType = {
 }
 
 export const createTableImporter = <
-TA4EEntity extends EventImport.Item,
-TRowTemplate extends Record<keyof Record<string, unknown>, util.ValueOf<typeof FieldType>>
->(
-  param: {
-    rowTemplate: TRowTemplate
-    createFromRow: (
-      row: TableRow<{ [key in keyof TRowTemplate]: ReturnType<TRowTemplate[key]> }>,
-      index: number
-    ) => TA4EEntity[]
-    table: string
-  }
-) => {
-  function importData(importer: EventImport.EventImporter, airtable: Connection) {
+  TA4EEntity extends EventImport.Item,
+  TRowTemplate extends Record<
+    keyof Record<string, unknown>,
+    util.ValueOf<typeof FieldType>
+  >
+>(param: {
+  rowTemplate: TRowTemplate
+  createFromRow: (
+    row: TableRow<
+      { [key in keyof TRowTemplate]: ReturnType<TRowTemplate[key]> }
+    >,
+    index: number
+  ) => TA4EEntity[]
+  table: string
+}) => {
+  function importData(
+    importer: EventImport.EventImporter,
+    airtable: Connection
+  ) {
     return addTableToImport(importer, airtable, param)
   }
   return importData
@@ -98,14 +109,19 @@ TRowTemplate extends Record<keyof Record<string, unknown>, util.ValueOf<typeof F
 
 export const addTableToImport = async <
   TA4EEntity extends EventImport.Item,
-  TRowTemplate extends Record<keyof Record<string, unknown>, util.ValueOf<typeof FieldType>>
+  TRowTemplate extends Record<
+    keyof Record<string, unknown>,
+    util.ValueOf<typeof FieldType>
+  >
 >(
   importer: EventImport.EventImporter,
   airtable: Connection,
   param: {
     rowTemplate: TRowTemplate
     createFromRow: (
-      row: TableRow<{ [key in keyof TRowTemplate]-?: ReturnType<TRowTemplate[key]> }>,
+      row: TableRow<
+        { [key in keyof TRowTemplate]-?: ReturnType<TRowTemplate[key]> }
+      >,
       index: number
     ) => TA4EEntity[]
     /** Airtable table name */

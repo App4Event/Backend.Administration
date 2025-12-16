@@ -1,7 +1,7 @@
-openapi: "3.0.0"
+openapi: '3.0.0'
 info:
   title: app4event
-  version: "1.0"
+  version: '1.0'
 paths:
   /import:
     post:
@@ -104,6 +104,9 @@ components:
         color:
           type: string
           nullable: true
+        timelineColor:
+          type: string
+          nullable: true
         iconUnicode:
           type: string
           nullable: true
@@ -157,7 +160,7 @@ components:
         images:
           type: array
           items:
-            $ref: "#/components/schemas/Image"
+            $ref: '#/components/schemas/Image'
         links:
           type: array
           items:
@@ -180,6 +183,10 @@ components:
           type: number
         forcedSessionDetail:
           type: boolean
+        customIcons:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomIcon'
       required:
         - id
         - performerIds
@@ -249,10 +256,17 @@ components:
           type: string
         isListed:
           type: boolean
-        # images
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/Image'
+        newsTabId:
+          type: array
+          items:
+            type: string
     DelayedNews:
       allOf:
-        - $ref: "#/components/schemas/News"
+        - $ref: '#/components/schemas/News'
         - type: object
           properties:
             publishError:
@@ -354,3 +368,15 @@ components:
       enum:
         - COMPACT
         - LARGE
+    CustomIcon:
+      type: object
+      description: Custom icon for a Session
+      properties:
+        name:
+          type: string
+        icon:
+          type: string
+      required:
+        - id
+        - name
+        - icon

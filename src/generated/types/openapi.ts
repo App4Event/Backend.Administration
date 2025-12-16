@@ -59,6 +59,7 @@ export interface components {
       order: number;
       description?: string;
       color?: string | null;
+      timelineColor?: string | null;
       iconUnicode?: string | null;
       links?: components["schemas"]["Link"][];
       customFields?: components["schemas"]["CustomField"][];
@@ -84,6 +85,7 @@ export interface components {
       subsessionIds: string[];
       likes?: number;
       forcedSessionDetail?: boolean;
+      customIcons?: components["schemas"]["CustomIcon"][];
     };
     CustomField: {
       name?: string;
@@ -111,6 +113,8 @@ export interface components {
       body?: string;
       time?: string;
       isListed?: boolean;
+      images?: components["schemas"]["Image"][];
+      newsTabId?: string[];
     };
     DelayedNews: components["schemas"]["News"] & {
       publishError?: string;
@@ -153,6 +157,11 @@ export interface components {
       layout: components["schemas"]["VenueCategoryLayout"];
     };
     VenueCategoryLayout: "COMPACT" | "LARGE";
+    /** Custom icon for a Session */
+    CustomIcon: {
+      name: string;
+      icon: string;
+    };
   };
 }
 

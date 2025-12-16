@@ -121,6 +121,10 @@
             "nullable" : true,
             "type" : "string"
           },
+          "timelineColor" : {
+            "nullable" : true,
+            "type" : "string"
+          },
           "iconUnicode" : {
             "nullable" : true,
             "type" : "string"
@@ -229,6 +233,12 @@
           },
           "forcedSessionDetail" : {
             "type" : "boolean"
+          },
+          "customIcons" : {
+            "items" : {
+              "$ref" : "#/components/schemas/CustomIcon"
+            },
+            "type" : "array"
           }
         },
         "required" : [ "hasParent", "id", "performerIds", "performerNames", "subsessionIds", "timeFrom", "timeTo", "venueId", "venueName" ],
@@ -310,6 +320,18 @@
           },
           "isListed" : {
             "type" : "boolean"
+          },
+          "images" : {
+            "items" : {
+              "$ref" : "#/components/schemas/Image"
+            },
+            "type" : "array"
+          },
+          "newsTabId" : {
+            "items" : {
+              "type" : "string"
+            },
+            "type" : "array"
           }
         },
         "type" : "object"
@@ -439,6 +461,19 @@
       "VenueCategoryLayout" : {
         "enum" : [ "COMPACT", "LARGE" ],
         "type" : "string"
+      },
+      "CustomIcon" : {
+        "description" : "Custom icon for a Session",
+        "properties" : {
+          "name" : {
+            "type" : "string"
+          },
+          "icon" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "icon", "id", "name" ],
+        "type" : "object"
       },
       "DelayedNews_allOf" : {
         "properties" : {

@@ -10,13 +10,9 @@
     "declaration": true,
     "target": "es2017",
     "lib": ["ES2020.Promise", "ES2019", "DOM"],
-    "resolveJsonModule": true,
+    "resolveJsonModule": true
   },
   "compileOnSave": true,
-  "include": [
-    "src",
-  ],
-  "exclude": [
-    "node_modules/*"
-  ]
+  "include": ["src"],
+  "exclude": ["node_modules/*"]
 }
