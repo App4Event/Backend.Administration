@@ -91,6 +91,8 @@ const listToBePublishedNews = async (
               publishError: data.publishError,
               time: data.time,
               title: data.title ?? '',
+              newsTabId: data.newsTabId,
+              images: data.images,
             }
           }
         )
@@ -122,8 +124,8 @@ const publishDelayedNewsList = async (
         time: item.time,
         title: item.title,
         isListed: item.isListed ?? null!,
-        newsTabId: item.newsTabId,
-        images: item.images,
+        newsTabId: item.newsTabId ?? null!,
+        images: item.images ?? null!,
       }
       batch.set(
         f.firestore.doc(
