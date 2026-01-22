@@ -145,7 +145,10 @@ const publishDelayedNewsList = async (
         id: item.id,
       })
       state.failed += 1
-      batch.update(f.firestore.doc(item.id), { ...item, publishError })
+      batch.update(f.firestore.doc(item.firestorePath), {
+        ...item,
+        publishError,
+      })
     }
   })
   await batch.commit()
