@@ -377,6 +377,5 @@ components:
         icon:
           type: string
       required:
-        - id
         - name
         - icon
