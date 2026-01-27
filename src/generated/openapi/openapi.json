@@ -472,7 +472,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "icon", "id", "name" ],
+        "required" : [ "icon", "name" ],
         "type" : "object"
       },
       "DelayedNews_allOf" : {
