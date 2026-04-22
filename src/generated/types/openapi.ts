@@ -112,7 +112,6 @@ export interface components {
       title?: string;
       body?: string;
       time?: string;
-      isListed?: boolean;
       images?: components["schemas"]["Image"][];
       newsTabId?: string[];
     };

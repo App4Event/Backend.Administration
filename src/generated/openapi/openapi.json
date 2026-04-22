@@ -318,9 +318,6 @@
           "time" : {
             "type" : "string"
           },
-          "isListed" : {
-            "type" : "boolean"
-          },
           "images" : {
             "items" : {
               "$ref" : "#/components/schemas/Image"

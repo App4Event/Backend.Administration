@@ -85,7 +85,6 @@ const listToBePublishedNews = async (
             return {
               language,
               firestorePath: x.ref.path,
-              isListed: data.isListed,
               body: data.body ?? '',
               id: x.id,
               publishError: data.publishError,
@@ -123,7 +122,6 @@ const publishDelayedNewsList = async (
         body: item.body,
         time: item.time,
         title: item.title,
-        isListed: item.isListed ?? null!,
         newsTabId: item.newsTabId ?? null!,
         images: item.images ?? null!,
       }
