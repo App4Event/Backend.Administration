@@ -315,6 +315,9 @@
           "body" : {
             "type" : "string"
           },
+          "htmlBody" : {
+            "type" : "string"
+          },
           "time" : {
             "type" : "string"
           },
@@ -329,6 +332,19 @@
               "type" : "string"
             },
             "type" : "array"
+          },
+          "youtubeVideoLink" : {
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/Link"
+            }, {
+              "properties" : {
+                "order" : {
+                  "format" : "int64",
+                  "type" : "integer"
+                }
+              },
+              "type" : "object"
+            } ]
           }
         },
         "type" : "object"

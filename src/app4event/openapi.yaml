@@ -252,6 +252,8 @@ components:
           type: string
         body:
           type: string
+        htmlBody:
+          type: string
         time:
           type: string
         images:
@@ -262,6 +264,14 @@ components:
           type: array
           items:
             type: string
+        youtubeVideoLink:
+          allOf:
+            - $ref: '#/components/schemas/Link'
+            - type: object
+              properties:
+                order:
+                  type: integer
+                  format: int64
     DelayedNews:
       allOf:
         - $ref: '#/components/schemas/News'
