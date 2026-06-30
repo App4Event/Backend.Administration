@@ -111,9 +111,13 @@ export interface components {
       id?: string;
       title?: string;
       body?: string;
+      htmlBody?: string;
       time?: string;
       images?: components["schemas"]["Image"][];
       newsTabId?: string[];
+      youtubeVideoLink?: components["schemas"]["Link"] & {
+        order?: number;
+      };
     };
     DelayedNews: components["schemas"]["News"] & {
       publishError?: string;

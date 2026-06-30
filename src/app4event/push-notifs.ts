@@ -86,12 +86,14 @@ const listToBePublishedNews = async (
               language,
               firestorePath: x.ref.path,
               body: data.body ?? '',
+              htmlBody: data.htmlBody,
               id: x.id,
               publishError: data.publishError,
               time: data.time,
               title: data.title ?? '',
               newsTabId: data.newsTabId,
               images: data.images,
+              youtubeVideoLink: data.youtubeVideoLink,
             }
           }
         )
@@ -120,10 +122,12 @@ const publishDelayedNewsList = async (
       const news: entity.News = {
         id,
         body: item.body,
+        htmlBody: item.htmlBody ?? null!,
         time: item.time,
         title: item.title,
         newsTabId: item.newsTabId ?? null!,
         images: item.images ?? null!,
+        youtubeVideoLink: item.youtubeVideoLink ?? null!,
       }
       batch.set(
         f.firestore.doc(
