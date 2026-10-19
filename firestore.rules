@@ -40,6 +40,14 @@ service cloud.firestore {
         allow read;
     }
 
+    // Session like counts (app4event-backends function refreshSessionLikes)
+    // Anyone can read the aggregated counts. Only the function writes them
+    // (Admin SDK bypasses rules). It counts the user programs that contain
+    // the session in `likedSessionsIds`, so clients never write a count.
+    match /sessionLikesSummary/{document} {
+      allow read;
+    }
+
     // User data
     // 1) owner can read and write
     // 2) anyone can read `isPublic=true` agendas
